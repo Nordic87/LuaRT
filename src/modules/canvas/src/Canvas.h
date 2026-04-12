@@ -1,6 +1,6 @@
 /*
  | Canvas for LuaRT
- | Luart.org, Copyright (c) Tine Samir 2025.
+ | Luart.org, Copyright (c) Tine Samir 2026.
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Canvas.h | LuaRT binary module 
@@ -10,11 +10,10 @@
 #else
 #include "d2d1.h"
 #endif
-
+#include "../ui/src/ui.h"
 #include <dwrite.h>
 
 extern UIInterface *ui;
-extern luart_type TWidget;
 
 #define GetA(c)((float)((c) & 0xff))
 #define GetB(c)((float)((c >> 8) & 0xff))

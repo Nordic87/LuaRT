@@ -1,6 +1,6 @@
  /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Image.cpp | LuaRT Canvas Image object
@@ -9,7 +9,7 @@
 
 #include <luart.h>
 #include <File.h>
-#include <Widget.h>
+#include "../../ui/src/Widget.h"
 
 #ifdef _MSC_VER
 #include <d2d1.h>

@@ -1,13 +1,13 @@
 /*
  | Canvas for LuaRT
- | Luart.org, Copyright (c) Tine Samir 2025.
+ | Luart.org, Copyright (c) Tine Samir 2026.
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Canvas.cpp | LuaRT binary module
 */
 
 #include <luart.h>
-#include <Widget.h>
+#include "../ui/src/ui.h"
 #include <Task.h>
 #include <windows.h>
 #include <windowsx.h>
@@ -23,7 +23,7 @@ using namespace Microsoft::WRL;
 
 
 UIInterface *ui = NULL;
-luart_type TWidget = 0;
+luart_type TWidget;
 
 //--- Canvas type
 luart_type TCanvas;
@@ -200,7 +200,7 @@ static ID2D1Brush *getBrush(lua_State *L, Direct2D *d, int idx, double *dpi) {
 }
 
 LUA_METHOD(Canvas, point) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 4, &dpi);
   float x = static_cast<FLOAT>(luaL_checknumber(L, 2));
@@ -213,7 +213,7 @@ LUA_METHOD(Canvas, point) {
 }
 
 LUA_METHOD(Canvas, line) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 6, &dpi);
   
@@ -224,7 +224,7 @@ LUA_METHOD(Canvas, line) {
 }
 
 LUA_METHOD(Canvas, rect) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 6, &dpi);
 
@@ -235,7 +235,7 @@ LUA_METHOD(Canvas, rect) {
 }
 
 LUA_METHOD(Canvas, fillrect) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 6, &dpi);
 
@@ -246,7 +246,7 @@ LUA_METHOD(Canvas, fillrect) {
 }
 
 LUA_METHOD(Canvas, roundrect) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 8, &dpi);
 
@@ -257,7 +257,7 @@ LUA_METHOD(Canvas, roundrect) {
 }
 
 LUA_METHOD(Canvas, fillroundrect) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 8, &dpi);
 
@@ -268,7 +268,7 @@ LUA_METHOD(Canvas, fillroundrect) {
 }
 
 LUA_METHOD(Canvas, ellipse) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 6, &dpi);
 
@@ -279,7 +279,7 @@ LUA_METHOD(Canvas, ellipse) {
 }
 
 LUA_METHOD(Canvas, fillellipse) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 6, &dpi);
 
@@ -290,7 +290,7 @@ LUA_METHOD(Canvas, fillellipse) {
 }
 
 LUA_METHOD(Canvas, circle) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   lua_Number radius = luaL_checknumber(L, 4);
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 5, &dpi);
@@ -303,7 +303,7 @@ LUA_METHOD(Canvas, circle) {
 }
 
 LUA_METHOD(Canvas, fillcircle) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   lua_Number radius = luaL_checknumber(L, 4);
   double dpi;
   ID2D1Brush *brush = getBrush(L, d, 5, &dpi);
@@ -316,7 +316,7 @@ LUA_METHOD(Canvas, fillcircle) {
 }
 
 static IDWriteTextLayout *prepare_text(lua_State *L, Direct2D **d, double *dpi) {
-  Widget *w = lua_self(L, 1, Widget);
+  Widget *w = lua_selfwidget(L, 1);
 	*d = (Direct2D*)w->user;
   int len;
   wchar_t *str = lua_tolwstring(L, 2, &len);
@@ -332,7 +332,7 @@ static IDWriteTextLayout *prepare_text(lua_State *L, Direct2D **d, double *dpi) 
 }
 
 LUA_METHOD(Canvas, print) {
-  Widget *w = lua_self(L, 1, Widget);
+  Widget *w = lua_selfwidget(L, 1);
 	Direct2D *d;
   double dpi;
   IDWriteTextLayout* layout = prepare_text(L, &d, &dpi);
@@ -366,7 +366,7 @@ LUA_METHOD(Canvas, measure) {
 }
 
 LUA_METHOD(Canvas, rotate) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget)->user);
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1)->user);
   D2D1_POINT_2F center;
   double dpi;
 
@@ -381,7 +381,7 @@ LUA_METHOD(Canvas, rotate) {
 }
 
 LUA_METHOD(Canvas, scale) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget)->user);
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1)->user);
   D2D1_POINT_2F center;
   double dpi;
 
@@ -396,7 +396,7 @@ LUA_METHOD(Canvas, scale) {
 }
 
 LUA_METHOD(Canvas, translate) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget)->user);
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1)->user);
   double dpi;
 
   ui->lua_uigetinfo(&dpi, NULL);
@@ -406,7 +406,7 @@ LUA_METHOD(Canvas, translate) {
 }
 
 LUA_METHOD(Canvas, skew) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget)->user);
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1)->user);
   D2D1_POINT_2F center;
   double dpi;
   
@@ -421,15 +421,15 @@ LUA_METHOD(Canvas, skew) {
 }
 
 LUA_METHOD(Canvas, identity) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget)->user);
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1)->user);
   d->transform = D2D1::Matrix3x2F::Identity();
   d->DCRender->SetTransform(d->transform);
 	return 0;  
 }
 
 LUA_METHOD(Canvas, clear) {
-  Widget *w = lua_self(L, 1, Widget);
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+  Widget *w = lua_selfwidget(L, 1);
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   D2D1_COLOR_F color = d->bgcolor;
 
   if (lua_gettop(L) > 1) {
@@ -442,7 +442,7 @@ LUA_METHOD(Canvas, clear) {
 
 static int new_instance(lua_State *L, const char *type) {
 	int i, n = lua_gettop(L);
-  lua_pushlightuserdata(L, (lua_self(L, 1, Widget))->user);
+  lua_pushlightuserdata(L, (lua_selfwidget(L, 1))->user);
   lua_insert(L, 2);
   lua_pushnewinstance(L, type, n);
   return 1;
@@ -461,14 +461,14 @@ LUA_METHOD(Canvas, RadialGradient) {
 }
 
 LUA_PROPERTY_GET(Canvas, color) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
 
   lua_pushinteger(L, (UINT32)RGBA((int)(d->color.r*255), (int)(d->color.g*255), (int)(d->color.b*255), int(d->color.a*255)));
   return 1;
 }
 
 LUA_PROPERTY_SET(Canvas, color) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   lua_Integer color = luaL_checkinteger(L, 2);
   
   d->colorBrush->Release();
@@ -478,14 +478,14 @@ LUA_PROPERTY_SET(Canvas, color) {
 }
 
 LUA_PROPERTY_GET(Canvas, bgcolor) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
 
   lua_pushinteger(L, (UINT32)RGBA((int)(d->bgcolor.r*255), (int)(d->bgcolor.g*255), (int)(d->bgcolor.b*255), int(d->bgcolor.a*255)));
   return 1;
 }
 
 LUA_PROPERTY_SET(Canvas, bgcolor) {
-  Widget *w = lua_self(L, 1, Widget);
+  Widget *w = lua_selfwidget(L, 1);
   Direct2D *d = (Direct2D*)w->user;
   lua_Integer bgcolor = luaL_checkinteger(L, 2);
   
@@ -495,7 +495,7 @@ LUA_PROPERTY_SET(Canvas, bgcolor) {
 }
 
 LUA_PROPERTY_GET(Canvas, font) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   wchar_t fontname[256];
   d->textFormat->GetFontFamilyName(fontname, 256);
 	lua_pushwstring(L, fontname);
@@ -503,7 +503,7 @@ LUA_PROPERTY_GET(Canvas, font) {
 }
 
 static int setFont(lua_State *L, wchar_t *fontname, float size, DWRITE_FONT_WEIGHT weight, DWRITE_FONT_STRETCH stretch, DWRITE_FONT_STYLE style) {
-	Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+	Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   wchar_t oldfontname[256];
 
   if (!weight)
@@ -532,7 +532,7 @@ LUA_PROPERTY_SET(Canvas, fontsize) {
 }
 
 LUA_PROPERTY_GET(Canvas, fontsize) {
-  lua_pushnumber(L, ((Direct2D*)(lua_self(L, 1, Widget))->user)->textFormat->GetFontSize());
+  lua_pushnumber(L, ((Direct2D*)(lua_selfwidget(L, 1))->user)->textFormat->GetFontSize());
 	return 1;
 }
 
@@ -541,7 +541,7 @@ LUA_PROPERTY_SET(Canvas, fontweight) {
 }
 
 LUA_PROPERTY_GET(Canvas, fontweight) {
-  lua_pushinteger(L, ((Direct2D*)(lua_self(L, 1, Widget))->user)->textFormat->GetFontWeight());
+  lua_pushinteger(L, ((Direct2D*)(lua_selfwidget(L, 1))->user)->textFormat->GetFontWeight());
 	return 1;
 }
 
@@ -550,7 +550,7 @@ LUA_PROPERTY_SET(Canvas, fontstretch) {
 }
 
 LUA_PROPERTY_GET(Canvas, fontstretch) {
-  lua_pushinteger(L, ((Direct2D*)(lua_self(L, 1, Widget))->user)->textFormat->GetFontStretch());
+  lua_pushinteger(L, ((Direct2D*)(lua_selfwidget(L, 1))->user)->textFormat->GetFontStretch());
 	return 1;
 }
 
@@ -559,18 +559,18 @@ LUA_PROPERTY_SET(Canvas, fontstyle) {
 }
 
 LUA_PROPERTY_GET(Canvas, fontstyle) {
-  lua_pushstring(L, style_values[((Direct2D*)(lua_self(L, 1, Widget))->user)->textFormat->GetFontStyle()]);
+  lua_pushstring(L, style_values[((Direct2D*)(lua_selfwidget(L, 1))->user)->textFormat->GetFontStyle()]);
 	return 1;
 }
 
 LUA_METHOD(Canvas, begin) {
-  ((Direct2D*)(lua_self(L, 1, Widget))->user)->DCRender->BeginDraw();
+  ((Direct2D*)(lua_selfwidget(L, 1))->user)->DCRender->BeginDraw();
   return 0;
 }
 
 LUA_METHOD(Canvas, flip) {
-  ((Direct2D*)(lua_self(L, 1, Widget))->user)->EndDraw();
-  RedrawWindow(((Direct2D*)lua_self(L, 1, Widget)->user)->hwnd, NULL, NULL, RDW_UPDATENOW);
+  ((Direct2D*)(lua_selfwidget(L, 1))->user)->EndDraw();
+  RedrawWindow(((Direct2D*)lua_selfwidget(L, 1)->user)->hwnd, NULL, NULL, RDW_UPDATENOW);
   return 0;
 }
 
@@ -598,7 +598,7 @@ GUID GetWICContainerFormatFromExtension(const wchar_t* filename, GUID* pPixelFor
 }
 
 LUA_METHOD(Canvas, capture) {
-  Direct2D *d = (Direct2D*)(lua_self(L, 1, Widget))->user;
+  Direct2D *d = (Direct2D*)(lua_selfwidget(L, 1))->user;
   wchar_t *filename = luaL_checkFilename(L, 2);
   double dpi;
   WICPixelFormatGUID fmt;
@@ -769,8 +769,8 @@ extern "C" {
         luaL_require(L, "ui");
         luaL_getmetafield(L, -1, "__interface");
         ui = (UIInterface *)lua_touserdata(L, -1);
-        lua_pop(L, 1);
         TWidget = ui->TWidget;
+        lua_pop(L, 1);
         ui->lua_regwidgetmt(L, Canvas, ui->WIDGET_METHODS, FALSE, FALSE, TRUE, FALSE, FALSE);
         luaL_setrawfuncs(L, Canvas_methods);
         on_Hover = ui->lua_registerevent(L, NULL, event_onHover);

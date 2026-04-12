@@ -1,7 +1,7 @@
 #include "Direct2D.h"
 #include <wincodec.h>
 #include <stdio.h>
-#include <Widget.h>
+#include "../../ui/src/Widget.h"
 
 template <class Type> void SafeRelease(Type **obj) 
 {
