@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Task.c | LuaRT Task object implementation
@@ -15,9 +15,14 @@
 
 luart_type TTask;
 
+const char *status[] = { "running", "created", "sleeping", "waiting", "paused", "terminated"};
+
 //----------------------------------[ Task constructor ]
 LUA_CONSTRUCTOR(Task) {
-	lua_newinstance(L, create_task(L), Task);
+	Task *t = create_task(L);
+	lua_newinstance(L, t, Task);
+	lua_pushvalue(L, -1);
+	t->taskref = luaL_ref(L, LUA_REGISTRYINDEX);
 	return 1;
 }
 
@@ -56,7 +61,6 @@ LUA_PROPERTY_GET(Task, terminated) {
 
 //----------------------------------[ Task.status property ]
 LUA_PROPERTY_GET(Task, status) {
-	static const char *status[] = { "running", "created", "sleeping", "waiting", "paused", "terminated"};
 	lua_pushstring(L, status[lua_self(L, 1, Task)->status]);
 	return 1;
 }

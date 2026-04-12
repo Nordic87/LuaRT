@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | async.h | LuaRT async functions header
@@ -15,6 +15,10 @@ extern "C" {
 #endif
     
     #include <Task.h>
+
+    extern const char *status[];
+    
+    int start_task(lua_State *L, Task *t, int nargs);
 
     Task *create_task(lua_State *L);
 
@@ -31,6 +35,9 @@ extern "C" {
 
     //-------- Close a Task
     void close_task(lua_State *L, Task *t);
+    
+    //-------- Returns all actual Task objects in a table, returning the count as well
+    int get_alltasks(lua_State *L);
 
     //-------- Resume a Task
     BOOL resume_task(lua_State *L, Task *t, int args);

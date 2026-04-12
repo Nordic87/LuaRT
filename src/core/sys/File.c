@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | File.c | LuaRT File object implementation
@@ -308,7 +308,7 @@ readstd:
 LUA_METHOD(File, read) {
 	File *f = lua_self(L, 1, File);
 	if (FileRead(L, f, lua_gettop(L) > 1 ? (size_t)luaL_checkinteger(L, 2) : 0, FALSE)) {
-		if (!f->encoding)
+		if (!f->encoding) 
 			lua_pushinstance(L, Buffer, 1);
 	}
 	else
@@ -331,8 +331,11 @@ LUA_METHOD(File, readln) {
 //-------------------------------------[ File.flush() ]
 LUA_METHOD(File, flush) {
 	File *f = lua_self(L, 1, File);
-	if (f->stream)
+	if (f->stream) {
 		fflush(f->stream);
+		if (f->std)
+			FlushConsoleInputBuffer(f->h);
+	}
 	return 0;
 }
 

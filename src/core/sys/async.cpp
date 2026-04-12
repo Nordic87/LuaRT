@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | async.cpp | LuaRT async module
@@ -9,13 +9,11 @@
 #define LUA_LIB
 
 #include <list>
-
-#define LUART_TYPES
 #include "async.h"
 
 extern "C" {
-	LUA_API luart_type TTask;
 	LUA_API lua_Integer idleThreshold = 1;
+	
 }
 
 static std::list<Task *> Tasks;
@@ -43,7 +41,7 @@ static void hookf (lua_State *L, lua_Debug *ar) {
     if (ar->currentline >= 0)
       lua_pushinteger(L, ar->currentline);  /* push current line */
     else lua_pushnil(L);
-    lua_assert(lua_getinfo(L, "lS", ar));
+    lua_getinfo(L, "lS", ar);
     lua_pcall(L, 2, 0, 0);  /* call hook function */
   }
 }
@@ -58,9 +56,7 @@ Task *create_task(lua_State *L) {
 		t->from = tt;
 	luaL_checktype(L, 2, LUA_TFUNCTION);
 	lua_pushvalue(L, 2);
-	lua_xmove(L, t->L, 1);	
-	lua_pushvalue(L, 1);
-	t->taskref = luaL_ref(L, LUA_REGISTRYINDEX);
+	lua_xmove(L, t->L, 1);
 	Tasks.push_back(t);
 	if (lua_getfield(L, LUA_REGISTRYINDEX, "_TASKHOOK")) {
 		int mask, count;
@@ -110,7 +106,7 @@ int start_task(lua_State *L, Task *t, int nargs) {
 	}
 	t->status = TRunning;
 	nargs = resume_task(L, t, nargs);
-	if (!nargs) {
+    if (!nargs) {
 		lua_xmove(t->L, L, 1);
 		lua_error(L);
 	}
@@ -121,12 +117,11 @@ int start_task(lua_State *L, Task *t, int nargs) {
 BOOL resume_task(lua_State *L, Task *t, int args) {
 	int nresults = 0, status;
 	int nargs = args != -1 ? args : lua_gettop(t->L)-1;
-	lua_State *from = t->from ? t->from->L : L;
 
-	if ( (t->status != TTerminated) && (status = lua_resume(t->L, from, t->status == TSleep ? 0 : nargs, &nresults)) > 1 )
+	if ( (t->status != TTerminated) && (status = lua_resume(t->L, L, t->status == TSleep ? 0 : nargs, &nresults)) > 1 )
 		return false;
-	else if (status == LUA_YIELD) {
-		lua_xmove(t->L, from, nresults);
+	if (status == LUA_YIELD) {
+		lua_xmove(t->L, L, nresults);
 		t->status = TSleep;
 	} else if (status == LUA_OK)
 		t->status = TTerminated;
@@ -161,10 +156,10 @@ BOOL update_tasks(lua_State *L) {
         if (t->status == TRunning) {
             if (lua_status(t->L) == LUA_YIELD) {
                 if (!resume_task(L, t, -1)) {
-                    lua_xmove(t->L, L, 1);
+				lua_xmove(t->L, L, 1);
                     return false;
                 }
-            }
+			}
         }
 
         if (t->status == TTerminated && !t->iswaiting) {
@@ -226,6 +221,17 @@ int task_count() {
             ++count;
     }
     return count;
+}
+
+//-------- Returns all actual Task objects in a table, returning the count as well
+int get_alltasks(lua_State *L) {
+	lua_createtable(L, Tasks.size(), 0);
+	int i = 0;
+	for (auto &t : Tasks) {
+		lua_rawgeti(L, LUA_REGISTRYINDEX, t->taskref);
+		lua_rawseti(L, -2, ++i);
+	}
+	return i;
 }
 
 //-------- Wait for all Tasks

@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | COM.c | LuaRT COM Objects implementation
@@ -317,33 +317,70 @@ LUA_METHOD(COM, __index) {
 	ITypeInfo* typeInfo = NULL;
 	TYPEATTR* typeAttr = NULL;
 	VARDESC* varDesc = NULL;
+	FUNCDESC* funcDesc = NULL;
+	BOOL needsClosure = FALSE;
 
 	if (SUCCEEDED(IDispatch_GetIDsOfNames(obj->this, &IID_NULL, &field, 1, 0, &id))) {
 		if (GetResultType(obj, field, &restype))
-			goto method;			
-		HRESULT value = IDispatch_Invoke(obj->this, id, &IID_NULL, 0, DISPATCH_PROPERTYGET, &params, &result, &execpInfo, &puArgErr);
-		if (value == DISP_E_BADPARAMCOUNT) {
+			goto method;
+		
+		if (obj->typeinfo) {
+			TYPEATTR* attr;
+			if (SUCCEEDED(ITypeInfo_GetTypeAttr(obj->typeinfo, &attr))) {
+				for (WORD i = 0; i < attr->cFuncs; i++) {
+					if (SUCCEEDED(ITypeInfo_GetFuncDesc(obj->typeinfo, i, &funcDesc))) {
+						BSTR name;
+						UINT count;
+						if (SUCCEEDED(ITypeInfo_GetNames(obj->typeinfo, funcDesc->memid, &name, 1, &count))) {
+							if (lstrcmpiW(name, field) == 0) {
+								// Si c'est un PROPERTYGET avec des paramètres, on a besoin d'une closure
+								if ((funcDesc->invkind & INVOKE_PROPERTYGET) && funcDesc->cParams > 0) {
+									needsClosure = TRUE;
+									SysFreeString(name);
+									ITypeInfo_ReleaseFuncDesc(obj->typeinfo, funcDesc);
+									break;
+								}
+							}
+							SysFreeString(name);
+						}
+						ITypeInfo_ReleaseFuncDesc(obj->typeinfo, funcDesc);
+					}
+				}
+				ITypeInfo_ReleaseTypeAttr(obj->typeinfo, attr);
+			}
+		}
+		
+		if (needsClosure) {
 			lua_pushvalue(L, 2);
 			lua_pushinteger(L, DISPATCH_PROPERTYGET | DISPATCH_METHOD);
 			lua_pushvalue(L, 1);
-			lua_pushinteger(L, restype);			
-			lua_pushcclosure(L, COM_method_call, 4);
-		} else if (value == S_OK) {		
-			VariantInit(&result);	
-			lua_pushvalue(L, 2);
-			lua_pushinteger(L, DISPATCH_PROPERTYGET);
-			lua_pushvalue(L, 1);
-			lua_pushinteger(L, restype);			
-			lua_pushcclosure(L, COM_method_call, 4);
-			lua_call(L, 0, 1);
-		} else if (value == DISP_E_EXCEPTION) {
-			lua_pushwstring(L, obj->name);
-			luaL_error(L, "'%s.%s' field not found", lua_tostring(L, -1), lua_tostring(L, 2));
-		} else {
-method:		lua_pushvalue(L, 2);
-lua_pushinteger(L, DISPATCH_METHOD);
 			lua_pushinteger(L, restype);
-			lua_pushcclosure(L, COM_method_call, 3);
+			lua_pushcclosure(L, COM_method_call, 4);
+		} else {
+			HRESULT value = IDispatch_Invoke(obj->this, id, &IID_NULL, 0, DISPATCH_PROPERTYGET, &params, &result, &execpInfo, &puArgErr);
+			if (value == DISP_E_BADPARAMCOUNT) {
+				lua_pushvalue(L, 2);
+				lua_pushinteger(L, DISPATCH_PROPERTYGET | DISPATCH_METHOD);
+				lua_pushvalue(L, 1);
+				lua_pushinteger(L, restype);			
+				lua_pushcclosure(L, COM_method_call, 4);
+			} else if (value == S_OK) {		
+				VariantInit(&result);	
+				lua_pushvalue(L, 2);
+				lua_pushinteger(L, DISPATCH_PROPERTYGET);
+				lua_pushvalue(L, 1);
+				lua_pushinteger(L, restype);			
+				lua_pushcclosure(L, COM_method_call, 4);
+				lua_call(L, 0, 1);
+			} else if (value == DISP_E_EXCEPTION) {
+				lua_pushwstring(L, obj->name);
+				luaL_error(L, "'%s.%s' field not found", lua_tostring(L, -1), lua_tostring(L, 2));
+			} else {
+method:			lua_pushvalue(L, 2);
+				lua_pushinteger(L, DISPATCH_METHOD);
+				lua_pushinteger(L, restype);
+				lua_pushcclosure(L, COM_method_call, 3);
+			}
 		}
 	} else {		
 		long count;

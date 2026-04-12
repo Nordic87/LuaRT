@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Buffer.c | LuaRT Buffer object implementation
@@ -353,7 +353,6 @@ LUA_METHOD(Buffer, __concat) {
 	luaL_tolstring(L, 1, NULL);
 	luaL_tolstring(L, 2, NULL);
 	lua_concat(L, 2);
-	lua_pushinstance(L, Buffer, 1);
 	return 1;
 }
 

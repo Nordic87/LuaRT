@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | sys.c | LuaRT sys module
@@ -55,6 +55,7 @@ LUA_METHOD(sys, clock) {
 //-------------------------------------[ sys.exit() ]
 LUA_METHOD(sys, exit) {
 	int ret = (int)luaL_optinteger(L, 1, EXIT_SUCCESS);
+	lua_stop();
 	exit(ret);
 	return 0;
 }
@@ -143,6 +144,26 @@ LUA_METHOD(sys, tempdir) {
 LUA_METHOD(sys, beep) {
 	Beep(550, 200);
 	return 0;
+}
+
+//-------------------------------------[ sys.TaskFactory ]
+static int TaskFactory(lua_State *L) {
+	int nargs = lua_gettop(L);
+	lua_pushvalue(L, lua_upvalueindex(1));
+	lua_pushinstance(L, Task, 1);
+	lua_pushvalue(L, -1);
+	for (int i = 1; i <= nargs; i++)
+		lua_pushvalue(L, i);
+	if (lua_pcall(L, nargs, 0, 0) != LUA_OK)
+		lua_error(L);
+	return 1;
+}
+
+LUA_METHOD(sys, TaskFactory) {
+	luaL_checktype(L, 1, LUA_TFUNCTION);
+	lua_pushvalue(L, 1);
+	lua_pushcclosure(L, TaskFactory, 1);
+	return 1;
 }
 
 //-------------------------------------[ sys.halt ]
@@ -310,7 +331,7 @@ LUA_PROPERTY_SET(sys, clipboard) {
 			case LUA_TSTRING:	if (EmptyClipboard()) {
 									int length;
 									wchar_t *pGlobal, *text = lua_tolwstring(L, 1, &length);
-								    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, length * sizeof(wchar_t));
+								    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, (length+1) * sizeof(wchar_t));
 									if (hGlobal) {
 										if (pGlobal = (wchar_t*)GlobalLock(hGlobal)) {
 											wcscpy(pGlobal, text);
@@ -570,6 +591,12 @@ LUA_PROPERTY_GET(sys, registry) {
 	return 1;
 }
 
+//-------- Returns all actual Task objects in a table, returning the count as well
+LUA_PROPERTY_GET(sys, tasks) {
+	get_alltasks(L);
+	return 1;
+}
+
 /* ------------------------------------------------------------------------ */
 
 MODULE_FUNCTIONS(sys)
@@ -581,6 +608,7 @@ MODULE_FUNCTIONS(sys)
 	METHOD(sys, cmd)
 	METHOD(sys, halt)
 	METHOD(sys, fsentry)
+	METHOD(sys, TaskFactory)
 END
 
 MODULE_PROPERTIES(sys)
@@ -592,6 +620,7 @@ MODULE_PROPERTIES(sys)
 	READWRITE_PROPERTY(sys, atexit)
 	READWRITE_PROPERTY(sys, locale)
   	READONLY_PROPERTY(sys, language)
+  	READONLY_PROPERTY(sys, tasks)
   	READWRITE_PROPERTY(sys, idleThreshold)
 END
 
