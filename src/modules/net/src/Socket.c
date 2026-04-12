@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Socket.c | LuaRT Socket object implementation
@@ -401,7 +401,7 @@ LUA_METHOD(Socket, recv) {
 	}
 	buff = malloc(size);
 	if ( s->tls ) {
-		if ( (done = DecryptRecv(s, buff+done, size)) == SOCKET_ERROR  )
+		if ( (done = DecryptRecv(s, buff+done, size)) == SOCKET_ERROR )
 			goto error;
 	} 
 	else if ( ((done = recv(s->sock, buff, size, 0)) == SOCKET_ERROR) )

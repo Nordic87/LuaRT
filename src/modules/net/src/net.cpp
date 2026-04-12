@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | net.c | LuaRT net module
@@ -115,7 +115,7 @@ LUA_METHOD(net, select) {
 	else if (result == SOCKET_ERROR) 
 		lua_pushboolean(L, FALSE);	//----- network error
 	else 
-		luaL_pushfail(L); //----- nothing happened
+		lua_pushnil(L); //----- nothing happened
 	free(list);
 	return 1;
 }

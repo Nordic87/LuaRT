@@ -1,6 +1,6 @@
 /*
  | power for LuaRT
- | Luart.org, Copyright (c) Tine Samir 2025.
+ | Luart.org, Copyright (c) Tine Samir 2026.
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | power.cpp | LuaRT power module
