@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | luaRT.h | LuaRT API header
@@ -163,10 +163,21 @@ LUA_API void lua_pushlwstring(lua_State *L, const wchar_t *str, int len);
 #define lua_towstring(L, i)		lua_tolwstring(L, i, NULL)
 #define lua_pushwstring(L, s)	lua_pushlwstring(L, s, -1)
 
+//--------------------------------------------------| Preprocessor functions
+
+//--- C-compatible wrapper around luaL_loadfilex with preprocessing
+LUA_API int luaL_loadfilep(lua_State* L, const char* filename, const char* mode);
+
 //--------------------------------------------------| Various utility functions
 
 //--- Returns index of string at specfied index, in a an array of options strings, or the default specified index
 LUA_API int lua_optstring(lua_State *L, int idx, const char *options[], int def);
+
+//-- Close Lua state and call atexit function if exists
+LUA_API void lua_stop(void);
+
+//--------------------------------------------------| Open modules function
+LUALIB_API void lua_openmodules(lua_State *L);
 
 //--- Returns an array of bytes if the specified executable has embedded content or NULL otherwise, and loads global "embed" module
 LUA_API BYTE *luaL_embedopen(lua_State *L);
@@ -185,7 +196,6 @@ typedef struct Task Task;
 //--- Push a task with the provided continuation C function and starts it, with a context and optional cleanup lua_CFunction
 //--- Always returns 1
 LUA_API Task *lua_pushtask(lua_State *L, lua_KFunction taskfunc, void *userdata, lua_CFunction gc);
-LUA_API void lua_setupdate(lua_CFunction func);
 
 //--- Sleeps the current task or the current Lua state for the provided delay
 LUA_API void lua_sleep(lua_State *L, lua_Integer delay);
@@ -240,25 +250,6 @@ LUA_API int zip_entry_open(struct zip_t *zip, const char *entryname);
 LUA_API int zip_entry_close(struct zip_t *zip);
 LUA_API int zip_entry_fread(struct zip_t *zip, const char *filename);
 
-//-------------------- Lua Clipboard format
-LUA_API HGLOBAL table_to_HDROPFormat(lua_State *L, int idx);
-
-//--------------------------------------------------| LuaRT sys/ui types
-typedef int WidgetType;
-struct _Widget;
-typedef struct _Widget Widget;
-typedef int (*lua_Event)(lua_State *L, Widget *w, MSG *msg);
-
-typedef void (*UI_INFO)(double *dpi, BOOL *isdark);
-typedef void *(*WIDGET_INIT)(lua_State *L, Widget **wp, double *dpi, BOOL *isdark);
-typedef Widget *(*WIDGET_CONSTRUCTOR)(lua_State *L, HWND h, WidgetType type, Widget *wp, SUBCLASSPROC proc);
-typedef Widget *(*WIDGET_DESTRUCTOR)(lua_State *L);
-typedef void (*WIDGET_REGISTER)(lua_State *L, int *type, const char *__typename, lua_CFunction constructor, const luaL_Reg *methods, const luaL_Reg *mt, BOOL has_text, BOOL has_font, BOOL has_cursor, BOOL has_icon, BOOL has_autosize, BOOL has_textalign, BOOL has_tooltip, BOOL is_parent, BOOL do_pop);
-typedef lua_Integer (*WIDGET_REGISTEREVENT)(lua_State *L, const char *methodname, lua_Event event);
-typedef LRESULT (CALLBACK *WIDGET_PROC)(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-
-#ifndef LUART_TYPES
-#define LUART_TYPES
 LUA_API luart_type TTask;
 LUA_API luart_type TFile;
 LUA_API luart_type TBuffer;
@@ -267,21 +258,9 @@ LUA_API luart_type TDatetime;
 LUA_API luart_type TPipe;
 LUA_API luart_type TZip;
 LUA_API luart_type TDirectory;
-#endif
 
-typedef struct {
-	UINT                *WM_LUAMAX;
-	WIDGET_INIT 		lua_widgetinitialize;
-	WIDGET_CONSTRUCTOR	lua_widgetconstructor;
-	WIDGET_DESTRUCTOR	lua_widgetdestructor;
-	WIDGET_REGISTER		lua_registerwidget;
-	WIDGET_REGISTEREVENT    lua_registerevent;
-	WIDGET_PROC			lua_widgetproc;
-	UI_INFO				lua_uigetinfo;
-	luaL_Reg 			*WIDGET_METHODS;
-    luart_type          TWidget;
-	Task			    *task;
-} UIInterface;
+//-------------------- Lua Clipboard format
+LUA_API HGLOBAL table_to_HDROPFormat(lua_State *L, int idx);
 
 #ifdef __cplusplus
 }

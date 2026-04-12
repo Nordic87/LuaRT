@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Pipe.h | LuaRT Pipe object header
@@ -26,8 +26,6 @@ typedef struct {
 	BOOL	echo;
 	ULONGLONG	delay;
 } Pipe;
-
-LUA_API luart_type TPipe;
 
 LUA_CONSTRUCTOR(Pipe);
 extern const luaL_Reg Pipe_methods[];

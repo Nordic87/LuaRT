@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Date.h | LuaRT Date object header
@@ -34,7 +34,6 @@ LUA_API LCID locale;
 LUA_CONSTRUCTOR(Datetime);
 extern const luaL_Reg Datetime_methods[];
 extern const luaL_Reg Datetime_metafields[];
-
 
 #ifdef __cplusplus
 }

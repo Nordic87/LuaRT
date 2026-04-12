@@ -13,7 +13,7 @@ extern "C" {
 #define LUA_PREFIX staticlua
 
 /******************************************************************************
-* Copyright (C) 1994-2025 Lua.org, PUC-Rio.
+* Copyright (C) 1994-2026 Lua.org, PUC-Rio.
 *
 * Permission is hereby granted, free of charge, to any person obtaining
 * a copy of this software and associated documentation files (the
@@ -38,23 +38,21 @@ extern "C" {
 #include <stdarg.h>
 #include <stddef.h>
 
-#define LUA_VERSION_MAJOR	"5"
-#define LUA_VERSION_MINOR	"4"
-#define LUA_VERSION_RELEASE	"8"
-
-#define LUA_VERSION_NUM			504
-#define LUA_VERSION_RELEASE_NUM		(LUA_VERSION_NUM * 100 + 8)
-
-#define LUA_VERSION	"Lua " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
-#define LUA_RELEASE	LUA_VERSION "." LUA_VERSION_RELEASE
-#define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2025 Lua.org, PUC-Rio"
+#define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2026 Lua.org, PUC-Rio"
 #define LUA_AUTHORS	"R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
+
+#define LUA_VERSION_MAJOR_N	5
+#define LUA_VERSION_MINOR_N	5
+#define LUA_VERSION_RELEASE_N	0
+
+#define LUA_VERSION_NUM  (LUA_VERSION_MAJOR_N * 100 + LUA_VERSION_MINOR_N)
+#define LUA_VERSION_RELEASE_NUM  (LUA_VERSION_NUM * 100 + LUA_VERSION_RELEASE_N)
 
 #define LUA_SIGNATURE	"\x1bLua"
 
 #define LUA_MULTRET	(-1)
 
-#define LUA_REGISTRYINDEX	(-LUAI_MAXSTACK - 1000)
+#define LUA_REGISTRYINDEX	(-(INT_MAX/2 + 1000))
 #define lua_upvalueindex(i)	(LUA_REGISTRYINDEX - (i))
 
 #define LUA_OK		0
@@ -82,9 +80,9 @@ typedef struct lua_State lua_State;
 
 #define LUA_MINSTACK	20
 
-#define LUA_RIDX_MAINTHREAD	1
 #define LUA_RIDX_GLOBALS	2
-#define LUA_RIDX_LAST		LUA_RIDX_GLOBALS
+#define LUA_RIDX_MAINTHREAD	3
+#define LUA_RIDX_LAST		3
 
 typedef LUA_NUMBER lua_Number;
 
@@ -112,11 +110,10 @@ typedef void (*lua_Hook) (lua_State *L, lua_Debug *ar);
 
 extern const char lua_ident[];
 
-typedef lua_State * (__cdecl *lua_newstate_t) (lua_Alloc f, void *ud);
+typedef lua_State * (__cdecl *lua_newstate_t) (lua_Alloc f, void *ud, unsigned seed);
 typedef void (__cdecl *lua_close_t) (lua_State *L);
 typedef lua_State * (__cdecl *lua_newthread_t) (lua_State *L);
 typedef int (__cdecl *lua_closethread_t) (lua_State *L, lua_State *from);
-typedef int (__cdecl *lua_resetthread_t) (lua_State *L);  
 
 typedef lua_CFunction (__cdecl *lua_atpanic_t) (lua_State *L, lua_CFunction panicf);
 
@@ -178,6 +175,8 @@ typedef void (__cdecl *lua_pushnil_t) (lua_State *L);
 typedef void (__cdecl *lua_pushnumber_t) (lua_State *L, lua_Number n);
 typedef void (__cdecl *lua_pushinteger_t) (lua_State *L, lua_Integer n);
 typedef const char * (__cdecl *lua_pushlstring_t) (lua_State *L, const char *s, size_t len);
+typedef const char * (__cdecl *lua_pushexternalstring_t) (lua_State *L,
+		const char *s, size_t len, lua_Alloc falloc, void *ud);
 typedef const char * (__cdecl *lua_pushstring_t) (lua_State *L, const char *s);
 typedef const char * (__cdecl *lua_pushvfstring_t) (lua_State *L, const char *fmt,
                                                       va_list argp);
@@ -241,11 +240,20 @@ typedef void (__cdecl *lua_warning_t) (lua_State *L, const char *msg, int tocont
 #define LUA_GCCOUNT		3
 #define LUA_GCCOUNTB		4
 #define LUA_GCSTEP		5
-#define LUA_GCSETPAUSE		6
-#define LUA_GCSETSTEPMUL	7
-#define LUA_GCISRUNNING		9
-#define LUA_GCGEN		10
-#define LUA_GCINC		11
+#define LUA_GCISRUNNING		6
+#define LUA_GCGEN		7
+#define LUA_GCINC		8
+#define LUA_GCPARAM		9
+
+#define LUA_GCPMINORMUL		0  
+#define LUA_GCPMAJORMINOR	1  
+#define LUA_GCPMINORMAJOR	2  
+
+#define LUA_GCPPAUSE		3  
+#define LUA_GCPSTEPMUL		4  
+#define LUA_GCPSTEPSIZE		5  
+
+#define LUA_GCPN		6
 
 typedef int (__cdecl *lua_gc_t) (lua_State *L, int what, ...);
 
@@ -256,6 +264,8 @@ typedef int (__cdecl *lua_next_t) (lua_State *L, int idx);
 typedef void (__cdecl *lua_concat_t) (lua_State *L, int n);
 typedef void (__cdecl *lua_len_t) (lua_State *L, int idx);
 
+#define LUA_N2SBUFFSZ	64
+typedef unsigned (__cdecl *lua_numbertocstring_t) (lua_State *L, int idx, char *buff);
 typedef size_t (__cdecl *lua_stringtonumber_t) (lua_State *L, const char *s);
 
 typedef lua_Alloc (__cdecl *lua_getallocf_t) (lua_State *L, void **ud);
@@ -303,7 +313,7 @@ typedef void (__cdecl *lua_closeslot_t) (lua_State *L, int idx);
 #define lua_getuservalue(L,idx)	lua_getiuservalue(L,idx,1)
 #define lua_setuservalue(L,idx)	lua_setiuservalue(L,idx,1)
 
-#define LUA_NUMTAGS		LUA_NUMTYPES
+#define lua_resetthread(L)	lua_closethread(L,NULL)
 
 #define LUA_HOOKCALL	0
 #define LUA_HOOKRET	1
@@ -332,8 +342,6 @@ typedef lua_Hook (__cdecl *lua_gethook_t) (lua_State *L);
 typedef int (__cdecl *lua_gethookmask_t) (lua_State *L);
 typedef int (__cdecl *lua_gethookcount_t) (lua_State *L);
 
-typedef int (__cdecl *lua_setcstacklimit_t) (lua_State *L, unsigned int limit);
-
 struct lua_Debug {
   int event;
   const char *name;	
@@ -347,13 +355,24 @@ struct lua_Debug {
   unsigned char nups;	
   unsigned char nparams;
   char isvararg;        
+  unsigned char extraargs;  
   char istailcall;	
-  unsigned short ftransfer;   
-  unsigned short ntransfer;   
+  int ftransfer;   
+  int ntransfer;   
   char short_src[LUA_IDSIZE]; 
   
   struct CallInfo *i_ci;  
 };
+
+#define LUAI_TOSTRAUX(x)	#x
+#define LUAI_TOSTR(x)		LUAI_TOSTRAUX(x)
+
+#define LUA_VERSION_MAJOR	LUAI_TOSTR(LUA_VERSION_MAJOR_N)
+#define LUA_VERSION_MINOR	LUAI_TOSTR(LUA_VERSION_MINOR_N)
+#define LUA_VERSION_RELEASE	LUAI_TOSTR(LUA_VERSION_RELEASE_N)
+
+#define LUA_VERSION	"Lua " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
+#define LUA_RELEASE	LUA_VERSION "." LUA_VERSION_RELEASE
 
 
 
@@ -416,6 +435,9 @@ typedef int (__cdecl *luaL_checkoption_t) (lua_State *L, int arg, const char *de
 typedef int (__cdecl *luaL_fileresult_t) (lua_State *L, int stat, const char *fname);
 typedef int (__cdecl *luaL_execresult_t) (lua_State *L, int stat);
 
+typedef void * (__cdecl *luaL_alloc_t) (void *ud, void *ptr, size_t osize,
+                                                  size_t nsize);
+
 #define LUA_NOREF       (-2)
 #define LUA_REFNIL      (-1)
 
@@ -432,6 +454,8 @@ typedef int (__cdecl *luaL_loadbufferx_t) (lua_State *L, const char *buff, size_
 typedef int (__cdecl *luaL_loadstring_t) (lua_State *L, const char *s);
 
 typedef lua_State * (__cdecl *luaL_newstate_t) (void);
+
+typedef unsigned (__cdecl *luaL_makeseed_t) (lua_State *L);
 
 typedef lua_Integer (__cdecl *luaL_len_t) (lua_State *L, int idx);
 
@@ -482,10 +506,6 @@ typedef void (__cdecl *luaL_requiref_t) (lua_State *L, const char *modname,
 #define luaL_intop(op,v1,v2)  \
 	((lua_Integer)((lua_Unsigned)(v1) op (lua_Unsigned)(v2)))
 
-#define luaL_pushfail(L)	lua_pushnil(L)
-
-#endif
-
 struct luaL_Buffer {
   char *b;  
   size_t size;  
@@ -531,45 +551,53 @@ typedef struct luaL_Stream {
 
 #define LUA_VERSUFFIX          "_" LUA_VERSION_MAJOR "_" LUA_VERSION_MINOR
 
+#define LUA_GLIBK		1
 typedef int (__cdecl *luaopen_base_t) (lua_State *L);
 
+#define LUA_LOADLIBNAME	"package"
+#define LUA_LOADLIBK	(LUA_GLIBK << 1)
+typedef int (__cdecl *luaopen_package_t) (lua_State *L);
+
 #define LUA_COLIBNAME	"coroutine"
+#define LUA_COLIBK	(LUA_LOADLIBK << 1)
 typedef int (__cdecl *luaopen_coroutine_t) (lua_State *L);
 
-#define LUA_TABLIBNAME	"table"
-typedef int (__cdecl *luaopen_table_t) (lua_State *L);
+#define LUA_DBLIBNAME	"debug"
+#define LUA_DBLIBK	(LUA_COLIBK << 1)
+typedef int (__cdecl *luaopen_debug_t) (lua_State *L);
 
 #define LUA_IOLIBNAME	"io"
+#define LUA_IOLIBK	(LUA_DBLIBK << 1)
 typedef int (__cdecl *luaopen_io_t) (lua_State *L);
 
+#define LUA_MATHLIBNAME	"math"
+#define LUA_MATHLIBK	(LUA_IOLIBK << 1)
+typedef int (__cdecl *luaopen_math_t) (lua_State *L);
+
 #define LUA_OSLIBNAME	"os"
+#define LUA_OSLIBK	(LUA_MATHLIBK << 1)
 typedef int (__cdecl *luaopen_os_t) (lua_State *L);
 
 #define LUA_STRLIBNAME	"string"
+#define LUA_STRLIBK	(LUA_OSLIBK << 1)
 typedef int (__cdecl *luaopen_string_t) (lua_State *L);
 
+#define LUA_TABLIBNAME	"table"
+#define LUA_TABLIBK	(LUA_STRLIBK << 1)
+typedef int (__cdecl *luaopen_table_t) (lua_State *L);
+
 #define LUA_UTF8LIBNAME	"utf8"
+#define LUA_UTF8LIBK	(LUA_TABLIBK << 1)
 typedef int (__cdecl *luaopen_utf8_t) (lua_State *L);
 
-#define LUA_MATHLIBNAME	"math"
-typedef int (__cdecl *luaopen_math_t) (lua_State *L);
+typedef void (__cdecl *luaL_openselectedlibs_t) (lua_State *L, int load, int preload);
 
-#define LUA_DBLIBNAME	"debug"
-typedef int (__cdecl *luaopen_debug_t) (lua_State *L);
-
-#define LUA_LOADLIBNAME	"package"
-typedef int (__cdecl *luaopen_package_t) (lua_State *L);
-
-typedef void (__cdecl *luaL_openlibs_t) (lua_State *L);
+#define luaL_openlibs(L)	luaL_openselectedlibs(L, ~0, 0)
 
 
 
 
 #pragma once
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <windows.h>
 #include <CommCtrl.h>
@@ -717,10 +745,21 @@ typedef void (__cdecl *lua_pushlwstring_t) (lua_State *L, const wchar_t *str, in
 #define lua_towstring(L, i)		lua_tolwstring(L, i, NULL)
 #define lua_pushwstring(L, s)	lua_pushlwstring(L, s, -1)
 
+//--------------------------------------------------| Preprocessor functions
+
+//--- C-compatible wrapper around luaL_loadfilex with preprocessing
+typedef int (__cdecl *luaL_loadfilep_t) (lua_State* L, const char* filename, const char* mode);
+
 //--------------------------------------------------| Various utility functions
 
 //--- Returns index of string at specfied index, in a an array of options strings, or the default specified index
 typedef int (__cdecl *lua_optstring_t) (lua_State *L, int idx, const char *options[], int def);
+
+//-- Close Lua state and call atexit function if exists
+typedef void (__cdecl *lua_stop_t) (void);
+
+//--------------------------------------------------| Open modules function
+typedef void (__cdecl *lua_openmodules_t) (lua_State *L);
 
 //--- Returns an array of bytes if the specified executable has embedded content or NULL otherwise, and loads global "embed" module
 typedef BYTE * (__cdecl *luaL_embedopen_t) (lua_State *L);
@@ -739,7 +778,6 @@ typedef struct Task Task;
 //--- Push a task with the provided continuation C function and starts it, with a context and optional cleanup lua_CFunction
 //--- Always returns 1
 typedef Task * (__cdecl *lua_pushtask_t) (lua_State *L, lua_KFunction taskfunc, void *userdata, lua_CFunction gc);
-typedef void (__cdecl *lua_setupdate_t) (lua_CFunction func);
 
 //--- Sleeps the current task or the current Lua state for the provided delay
 typedef void (__cdecl *lua_sleep_t) (lua_State *L, lua_Integer delay);
@@ -794,25 +832,6 @@ typedef int (__cdecl *zip_entry_open_t) (struct zip_t *zip, const char *entrynam
 typedef int (__cdecl *zip_entry_close_t) (struct zip_t *zip);
 typedef int (__cdecl *zip_entry_fread_t) (struct zip_t *zip, const char *filename);
 
-//-------------------- Lua Clipboard format
-typedef HGLOBAL (__cdecl *table_to_HDROPFormat_t) (lua_State *L, int idx);
-
-//--------------------------------------------------| LuaRT sys/ui types
-typedef int WidgetType;
-struct _Widget;
-typedef struct _Widget Widget;
-typedef int (*lua_Event)(lua_State *L, Widget *w, MSG *msg);
-
-typedef void (*UI_INFO)(double *dpi, BOOL *isdark);
-typedef void *(*WIDGET_INIT)(lua_State *L, Widget **wp, double *dpi, BOOL *isdark);
-typedef Widget *(*WIDGET_CONSTRUCTOR)(lua_State *L, HWND h, WidgetType type, Widget *wp, SUBCLASSPROC proc);
-typedef Widget *(*WIDGET_DESTRUCTOR)(lua_State *L);
-typedef void (*WIDGET_REGISTER)(lua_State *L, int *type, const char *__typename, lua_CFunction constructor, const luaL_Reg *methods, const luaL_Reg *mt, BOOL has_text, BOOL has_font, BOOL has_cursor, BOOL has_icon, BOOL has_autosize, BOOL has_textalign, BOOL has_tooltip, BOOL is_parent, BOOL do_pop);
-typedef lua_Integer (*WIDGET_REGISTEREVENT)(lua_State *L, const char *methodname, lua_Event event);
-typedef LRESULT (CALLBACK *WIDGET_PROC)(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-
-#ifndef LUART_TYPES
-#define LUART_TYPES
 LUA_API luart_type TTask;
 LUA_API luart_type TFile;
 LUA_API luart_type TBuffer;
@@ -821,25 +840,11 @@ LUA_API luart_type TDatetime;
 LUA_API luart_type TPipe;
 LUA_API luart_type TZip;
 LUA_API luart_type TDirectory;
-#endif
 
-typedef struct {
-	UINT                *WM_LUAMAX;
-	WIDGET_INIT 		lua_widgetinitialize;
-	WIDGET_CONSTRUCTOR	lua_widgetconstructor;
-	WIDGET_DESTRUCTOR	lua_widgetdestructor;
-	WIDGET_REGISTER		lua_registerwidget;
-	WIDGET_REGISTEREVENT    lua_registerevent;
-	WIDGET_PROC			lua_widgetproc;
-	UI_INFO				lua_uigetinfo;
-	luaL_Reg 			*WIDGET_METHODS;
-    luart_type          TWidget;
-	Task			    *task;
-} UIInterface;
+//-------------------- Lua Clipboard format
+typedef HGLOBAL (__cdecl *table_to_HDROPFormat_t) (lua_State *L, int idx);
 
-#ifdef __cplusplus
-}
-#endif
+
 #define lua_absindex            LUA_PREFIX.Absindex
 #define lua_arith               LUA_PREFIX.Arith
 #define lua_atpanic             LUA_PREFIX.Atpanic
@@ -890,12 +895,15 @@ typedef struct {
 #define lua_newthread           LUA_PREFIX.Newthread
 #define lua_newuserdatauv       LUA_PREFIX.Newuserdatauv
 #define lua_next                LUA_PREFIX.Next
+#define lua_numbertocstring     LUA_PREFIX.Numbertocstring
 #define lua_objectname          LUA_PREFIX.Objectname
+#define lua_openmodules         LUA_PREFIX.Openmodules
 #define lua_optstring           LUA_PREFIX.Optstring
 #define lua_pcallk              LUA_PREFIX.Pcallk
 #define lua_pushboolean         LUA_PREFIX.Pushboolean
 #define lua_pushBuffer          LUA_PREFIX.PushBuffer
 #define lua_pushcclosure        LUA_PREFIX.Pushcclosure
+#define lua_pushexternalstring  LUA_PREFIX.Pushexternalstring
 #define lua_pushfstring         LUA_PREFIX.Pushfstring
 #define lua_pushinteger         LUA_PREFIX.Pushinteger
 #define lua_pushlightuserdata   LUA_PREFIX.Pushlightuserdata
@@ -920,12 +928,10 @@ typedef struct {
 #define lua_rawsetp             LUA_PREFIX.Rawsetp
 #define lua_registermodule      LUA_PREFIX.Registermodule
 #define lua_registerobject      LUA_PREFIX.Registerobject
-#define lua_resetthread         LUA_PREFIX.Resetthread
 #define lua_resume              LUA_PREFIX.Resume
 #define lua_rotate              LUA_PREFIX.Rotate
 #define lua_schedule            LUA_PREFIX.Schedule
 #define lua_setallocf           LUA_PREFIX.Setallocf
-#define lua_setcstacklimit      LUA_PREFIX.Setcstacklimit
 #define lua_setfield            LUA_PREFIX.Setfield
 #define lua_setglobal           LUA_PREFIX.Setglobal
 #define lua_sethook             LUA_PREFIX.Sethook
@@ -935,11 +941,11 @@ typedef struct {
 #define lua_setmetatable        LUA_PREFIX.Setmetatable
 #define lua_settable            LUA_PREFIX.Settable
 #define lua_settop              LUA_PREFIX.Settop
-#define lua_setupdate           LUA_PREFIX.Setupdate
 #define lua_setupvalue          LUA_PREFIX.Setupvalue
 #define lua_setwarnf            LUA_PREFIX.Setwarnf
 #define lua_sleep               LUA_PREFIX.Sleep
 #define lua_status              LUA_PREFIX.Status
+#define lua_stop                LUA_PREFIX.Stop
 #define lua_stringtonumber      LUA_PREFIX.Stringtonumber
 #define lua_super               LUA_PREFIX.Super
 #define lua_taskcount           LUA_PREFIX.Taskcount
@@ -970,6 +976,7 @@ typedef struct {
 #define luaL_addlstring         LUA_PREFIX.AddlstringL
 #define luaL_addstring          LUA_PREFIX.AddstringL
 #define luaL_addvalue           LUA_PREFIX.AddvalueL
+#define luaL_alloc              LUA_PREFIX.AllocL
 #define luaL_argerror           LUA_PREFIX.ArgerrorL
 #define luaL_buffinit           LUA_PREFIX.BuffinitL
 #define luaL_buffinitsize       LUA_PREFIX.BuffinitsizeL
@@ -996,11 +1003,13 @@ typedef struct {
 #define luaL_gsub               LUA_PREFIX.GsubL
 #define luaL_len                LUA_PREFIX.LenL
 #define luaL_loadbufferx        LUA_PREFIX.LoadbufferxL
+#define luaL_loadfilep          LUA_PREFIX.LoadfilepL
 #define luaL_loadfilex          LUA_PREFIX.LoadfilexL
 #define luaL_loadstring         LUA_PREFIX.LoadstringL
+#define luaL_makeseed           LUA_PREFIX.MakeseedL
 #define luaL_newmetatable       LUA_PREFIX.NewmetatableL
 #define luaL_newstate           LUA_PREFIX.NewstateL
-#define luaL_openlibs           LUA_PREFIX.OpenlibsL
+#define luaL_openselectedlibs   LUA_PREFIX.OpenselectedlibsL
 #define luaL_optinteger         LUA_PREFIX.OptintegerL
 #define luaL_optlstring         LUA_PREFIX.OptlstringL
 #define luaL_optnumber          LUA_PREFIX.OptnumberL
@@ -1095,12 +1104,15 @@ typedef struct lua_All_functions
   lua_newthread_t         Newthread;
   lua_newuserdatauv_t     Newuserdatauv;
   lua_next_t              Next;
+  lua_numbertocstring_t   Numbertocstring;
   lua_objectname_t        Objectname;
+  lua_openmodules_t       Openmodules;
   lua_optstring_t         Optstring;
   lua_pcallk_t            Pcallk;
   lua_pushboolean_t       Pushboolean;
   lua_pushBuffer_t        PushBuffer;
   lua_pushcclosure_t      Pushcclosure;
+  lua_pushexternalstring_t Pushexternalstring;
   lua_pushfstring_t       Pushfstring;
   lua_pushinteger_t       Pushinteger;
   lua_pushlightuserdata_t Pushlightuserdata;
@@ -1125,12 +1137,10 @@ typedef struct lua_All_functions
   lua_rawsetp_t           Rawsetp;
   lua_registermodule_t    Registermodule;
   lua_registerobject_t    Registerobject;
-  lua_resetthread_t       Resetthread;
   lua_resume_t            Resume;
   lua_rotate_t            Rotate;
   lua_schedule_t          Schedule;
   lua_setallocf_t         Setallocf;
-  lua_setcstacklimit_t    Setcstacklimit;
   lua_setfield_t          Setfield;
   lua_setglobal_t         Setglobal;
   lua_sethook_t           Sethook;
@@ -1140,11 +1150,11 @@ typedef struct lua_All_functions
   lua_setmetatable_t      Setmetatable;
   lua_settable_t          Settable;
   lua_settop_t            Settop;
-  lua_setupdate_t         Setupdate;
   lua_setupvalue_t        Setupvalue;
   lua_setwarnf_t          Setwarnf;
   lua_sleep_t             Sleep;
   lua_status_t            Status;
+  lua_stop_t              Stop;
   lua_stringtonumber_t    Stringtonumber;
   lua_super_t             Super;
   lua_taskcount_t         Taskcount;
@@ -1175,6 +1185,7 @@ typedef struct lua_All_functions
   luaL_addlstring_t       AddlstringL;
   luaL_addstring_t        AddstringL;
   luaL_addvalue_t         AddvalueL;
+  luaL_alloc_t            AllocL;
   luaL_argerror_t         ArgerrorL;
   luaL_buffinit_t         BuffinitL;
   luaL_buffinitsize_t     BuffinitsizeL;
@@ -1201,11 +1212,13 @@ typedef struct lua_All_functions
   luaL_gsub_t             GsubL;
   luaL_len_t              LenL;
   luaL_loadbufferx_t      LoadbufferxL;
+  luaL_loadfilep_t        LoadfilepL;
   luaL_loadfilex_t        LoadfilexL;
   luaL_loadstring_t       LoadstringL;
+  luaL_makeseed_t         MakeseedL;
   luaL_newmetatable_t     NewmetatableL;
   luaL_newstate_t         NewstateL;
-  luaL_openlibs_t         OpenlibsL;
+  luaL_openselectedlibs_t OpenselectedlibsL;
   luaL_optinteger_t       OptintegerL;
   luaL_optlstring_t       OptlstringL;
   luaL_optnumber_t        OptnumberL;
@@ -1254,4 +1267,4 @@ extern lua_All_functions staticlua;
 #ifdef __cplusplus
 }
 #endif
-
+#endif
