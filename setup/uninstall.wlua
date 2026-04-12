@@ -1,7 +1,7 @@
-﻿local VERSION = '2.1.0'
+﻿local VERSION = '2.2.0'
 --[[
     | LuaRT - A Windows programming framework for Lua
-    | Luart.org, Copyright (c) Tine Samir 2023.
+    | Luart.org, Copyright (c) Tine Samir 2026.
     | See Copyright Notice in LICENSE.TXT
     |--------------------------------------------------
     | uninstall.wlua | LuaRT installation remove script

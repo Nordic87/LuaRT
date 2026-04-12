@@ -152,4 +152,4 @@ function win:onShow()
     end
 end
 
-ui.run(win):wait()
+win:showasync():wait()
