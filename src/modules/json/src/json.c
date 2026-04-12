@@ -170,7 +170,8 @@ LUA_METHOD(json, save)
         const char *str = Stringify(v);
         lua_pushboolean(L, fwrite(str, strlen(str), 1, f));
         fclose(f);      
-    }
+    } else
+        lua_pushboolean(L, 0);
     free(fname);
     return 1;
 }
