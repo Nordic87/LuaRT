@@ -1,5 +1,5 @@
-local ui = require "ui"
-require "canvas"
+--! luart-extensions
+import ui, canvas
 
 local win = ui.Window("Canvas - example", 800, 600)
 local c = ui.Canvas(win)
@@ -29,5 +29,7 @@ function c:onPaint()
 	self:flip()
 end
 
-ui.run(win):wait()
+win:show()
+
+await ui.task
 

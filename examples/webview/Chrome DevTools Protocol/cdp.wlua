@@ -1,11 +1,10 @@
+--! luart-extensions
 -- 
 -- LuaRT Webview Chrome DevTools Protocol : Capture the Webview content as a PNG file
 --
 
-local json = require "json"
-local sysutils = require "sysutils"
-local ui = require "ui"
-require "webview"
+import ui, webview
+import sysutils, json
 
 local win = ui.Window("Chrome Devtools Protocol example", "fixed", 320, 240)
 local wv = ui.Webview(win, 0, 0, 320, 200)
@@ -45,4 +44,4 @@ function wv:onReady()
 </html>]])
 end
 
-ui.run(win):wait()
+await win:showasync()

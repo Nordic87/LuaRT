@@ -1,5 +1,6 @@
-local ui = require "ui"
-require "canvas"
+--! luart-extensions
+
+import ui, canvas
 
 local win = ui.Window("Canvas - Use mousewheel to zoom in/out", 400, 360)
 
@@ -30,9 +31,8 @@ function c:onPaint()
 	c:scale(scale, scale)
 	img:draw((c.width-img.width)/2, (c.height-img.height)/2, 1, 1, "linear")
 	degree = degree + 0.5
-	sleep()
 	c:flip()
 end
 
-ui.run(win):wait()
+await win:showasync()
 

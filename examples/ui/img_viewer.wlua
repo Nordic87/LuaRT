@@ -1,10 +1,11 @@
+--! luart-extensions
 --
 --  luaRT img_viewer.lua example
 --  An image viewer
 --  Author: Samir Tine
 --
 
-local ui = require "ui"
+import ui
 
 local win = ui.Window("Image viewer", "raw", 512, 380)
 local img = ui.Picture(win, "")

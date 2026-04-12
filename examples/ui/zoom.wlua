@@ -1,4 +1,6 @@
-local ui = require "ui"
+--! luart-extensions
+
+import ui
 
 local win = ui.Window("Zoom example", 512, 380)
 local img = ui.Picture(win, "")

@@ -1,5 +1,5 @@
-local ui = require "ui"
-require "canvas"
+--! luart-extensions
+import ui, canvas
 
 local win = ui.Window("Canvas - Image interpolation example", "fixed", 480, 360)
 
@@ -36,5 +36,5 @@ function c:onPaint()
 	self:flip()
 end
 
-ui.run(win):wait()
+await win:showasync()
 

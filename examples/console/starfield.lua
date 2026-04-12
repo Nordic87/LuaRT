@@ -1,6 +1,7 @@
+--! luart-extensions
 -- luaRT example : starfield.lua
 
-local console = require "console"
+import console
 
 local colors = { "black", "blue", "green", "cyan", "red", "purple", "yellow", "white", "gray",
 "lightblue", "lightgreen", "lightcyan", "lightred", "lightpurple", "lightyellow", "brightwhite"}
@@ -12,6 +13,7 @@ for i=1,console.height*console.width/3 do
 	console.x = math.random(console.width)
 	console.y = math.random(console.height)
 	console.writecolor(colors[math.random(#colors)], "+")
+	sleep()
 end
 console.readchar()
 console.clear()

@@ -1,5 +1,9 @@
-local ui = require "ui"
-require "webview"
+--! luart-extensions
+--
+-- Blog application using Tailwind CSS - Powered by LuaRT
+--
+
+import ui, webview
 
 sys.currentdir = sys.File(arg[0]).path
 
@@ -13,4 +17,4 @@ function wv:onReady()
     wv.contextmenu = false
 end
 
-ui.run(win):wait()
+await win:showasync()

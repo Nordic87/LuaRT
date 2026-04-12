@@ -1,8 +1,10 @@
+--! luart-extensions
+--
 -- HexGL is an open source HTML5 racing game by Thibaut Despoulain (bkcore.com)
 -- Released under the MIT License, available on https://github.com/BKcore/HexGL
+--
 
-local ui = require "ui"
-require "webview"
+import ui, webview
 
 local win = ui.Window("HexGL example - Powered by LuaRT", "raw")
 local wv = ui.Webview(win, { url = "https://hexgl.bkcore.com/play" })
@@ -17,4 +19,4 @@ end
 
 win:maximize()
 
-ui.run(win):wait()
+await win:showasync()

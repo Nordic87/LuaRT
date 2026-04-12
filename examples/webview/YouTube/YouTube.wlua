@@ -1,5 +1,9 @@
-local ui = require "ui"
-require "webview"
+--! luart-extensions
+--
+-- LuaRT YouTube webview example
+--
+
+import ui, webview
 
 local win = ui.Window("YouTube - Powered by LuaRT", 640, 540)
 local wv = ui.Webview(win, { url = "https://www.youtube.com/?app=mobile" })
@@ -23,4 +27,4 @@ end
 
 win:center()
 
-ui.run(win):wait()
+await win:showasync()

@@ -1,10 +1,10 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example to access a LuaRT widget's internal handle to use Windows API with
 -- Thanks to MediaRot for the pixelart.png file
 --
 
-local ui = require "ui"
-local c = require "c"
+import ui, c
 
 -- Defines ShowWindow() function from user32.dll
 local user32 = c.Library("user32.dll")
@@ -22,11 +22,13 @@ function btn:onClick()
     -- widget contains a C Widget Struct using the btn widget as content
 	local widget = Widget(self)
     -- uses the internal btn handle to call ShowWindow() to hide it
-	user32.ShowWindow(widget.hwnd, false)
+	-- user32.ShowWindow(widget.hwnd, false)
+	btn:hide()
 	-- sleep for 2sec
 	sleep(2000)
     -- uses the internal btn handle to call ShowWindow() to show it again
-	user32.ShowWindow(widget.hwnd, true)
+	-- user32.ShowWindow(widget.hwnd, true)
+	btn:show()
 end
 
-ui.run(win):wait()
+await win:showasync()

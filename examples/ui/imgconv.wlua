@@ -1,4 +1,5 @@
-local ui = require "ui"
+--! luart-extensions
+import ui
 
 local win = ui.Window("Picture conversion example", 512, 380)
 win:status("")
@@ -22,9 +23,4 @@ end
 
 win:center()
 
-win:show()
-
-
-repeat
-    ui.update()
-until win.visible == false
+await win:showasync()

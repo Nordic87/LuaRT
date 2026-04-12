@@ -1,10 +1,11 @@
+--! luart-extensions
 --
 --  luaRT binary.lua example
 --  A binary file viewer
 --  Author: Samir Tine
 --
 
-local ui = require "ui"
+import ui
 
 -- create a simple window 
 local win = ui.Window("Binary file viewer sample", "fixed", 560, 460)
@@ -22,8 +23,6 @@ edit.bgcolor = 0x000030
 edit.fgcolor = 0xAAAAAA
 edit.border = false
 
-win:show()
-
 function clean(buff)
   local result = ""
   for char in each(tostring(buff)) do
@@ -39,11 +38,9 @@ function clean(buff)
   return result
 end
 
-local file = ui.opendialog("Select a file to view its binary content", false, "All files (*.*)|*.*")
-file:open("read", "binary")
-
 -- use a Task to keep loading the file while updating the ui (for big files)
-async(function ()
+async function showdata(file)
+  file:open("read", "binary")
   while true do
     local data = file:read(16)
     if #data == 0 then
@@ -52,7 +49,9 @@ async(function ()
     edit:append(string.gsub(data:encode("hex"), "%w%w", function (byte) return byte.." " end).."  "..clean(data).."\n")
     sleep()
   end  
-end)
+end
+
+showdata(ui.opendialog("Select a file to view its binary content", false, "All files (*.*)|*.*"))
 
 -- update user interface Task concurrently
-ui.run(win):wait()
+await win:showasync()

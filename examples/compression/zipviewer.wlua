@@ -1,5 +1,7 @@
-local ui = require "ui"
-local compression = require "compression"
+--! luart-extensions
+
+import ui
+import compression
 
 local win = ui.Window("Zip file viewer", "fixed", 250, 300)
 local list = ui.List(win, {}, 0, 40, 250, 260)
@@ -30,7 +32,7 @@ function list:onDoubleClick(item)
 end
 
 
-ui.run(win):wait()
+await win:showasync()
 
 for fname in each(toremove) do
     sys.File(fname):remove()

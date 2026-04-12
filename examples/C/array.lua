@@ -1,8 +1,10 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example manipulating a C Array of `char`
 --
 
-local c = require "c"
+
+import c
 
 -- Helper function to print Array content
 local function print_array(a, title)

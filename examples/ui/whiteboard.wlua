@@ -1,5 +1,5 @@
-local ui = require("ui")
-require "canvas"
+--! luart-extensions
+import ui, canvas
 
 local win = ui.Window("Whiteboard example")
 local canvas = ui.Canvas(win)
@@ -22,4 +22,4 @@ function canvas:onHover(x, y, button)
     self:flip()
 end
 
-ui.run(win):wait()
+win:showasync():wait()

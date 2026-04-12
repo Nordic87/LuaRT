@@ -1,5 +1,9 @@
-local ui = require "ui"
-require "webview"
+--! luart-extensions
+--
+-- LuaRT Webview userAgent property example
+--
+
+import ui, webview
 
 local win = ui.Window("Webview.useragent property", "fixed", 320, 200)
 local wv = ui.Webview(win)
@@ -32,4 +36,4 @@ function wv:onReady()
 </html>]])
 end
 
-ui.run(win):wait()
+await win:showasync()

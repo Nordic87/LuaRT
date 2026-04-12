@@ -1,10 +1,11 @@
+--! luart-extensions
 --
 --  LuaRT balls.lua example
 --  Shows a bouncing ball
 --  Adapted from cos00kun (https://community.luart.org)
 --
+import ui
 
-local ui = require "ui"
 local picture= {}
 local alpha= {}
 local balls= 6
@@ -45,13 +46,18 @@ for i=1, balls do
 end		
 
 win:center()
-win:show()
 
-repeat
-  for i=1, balls do
-    picture[i].x = picture[i].x + 12*math.sin(alpha[i])
-    picture[i].y = picture[i].y - 12*math.cos(alpha[i])
-    control(picture[i].x, picture[i].y, i)
-  end
-  ui.update()
-until not win.visible
+async function draw_balls()
+  	while win.visible do
+		for i=1, balls do
+			picture[i].x = picture[i].x + 12*math.sin(alpha[i])
+			picture[i].y = picture[i].y - 12*math.cos(alpha[i])
+			control(picture[i].x, picture[i].y, i)
+		end		
+		sleep()
+	end
+end
+
+win:showasync()
+
+await draw_balls()

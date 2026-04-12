@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT Window.startmoving() example
 --
 
-local ui = require "ui"
+import ui
 
 local win = ui.Window("Window.startmoving() example", "raw", 320, 200)
 local label = ui.Label(win, "Click and drag to move the Window !")
@@ -15,4 +16,4 @@ function label:onClick()
     win:startmoving()
 end
 
-ui.run(win):wait()
+await win:showasync()

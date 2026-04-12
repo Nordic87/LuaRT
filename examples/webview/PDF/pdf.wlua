@@ -1,10 +1,9 @@
+--! luart-extensions
 -- 
 -- LuaRT Webview.printPDF() example : Generate a PDF file using Webview content
 --
 
-local sysutils = require "sysutils"
-local ui = require "ui"
-require "webview"
+import ui, webview, sysutils
 
 local win = ui.Window("PDF Generation using Webview", "fixed", 640, 540)
 
@@ -15,11 +14,11 @@ button.y = 10
 local wv = ui.Webview(win, 0, button.height+button.y+10, 640, 540)
 
 function button:onClick()
-    local success, result = await(wv:printPDF {
+    local success, result = await wv:printPDF {
         file = "test.pdf",
         orientation = "portrait",
         backgrounds = true
-    })
+    }
     if not success then
         ui.error(result)
      else
@@ -122,5 +121,5 @@ end
 
 win:center()
 
-ui.run(win):wait()
+await win:showasync()
 

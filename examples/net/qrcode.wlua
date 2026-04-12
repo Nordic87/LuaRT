@@ -30,4 +30,4 @@ function button:onClick()
     end
 end
 
-ui.run(win):wait()
+win:showasync():wait()

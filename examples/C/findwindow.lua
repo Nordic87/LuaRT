@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example to search for an opened Window by title name
 --
 
-local c = require "c"
+import c
 
 -- load user32.dll library
 local user32 = c.Library("user32.dll")

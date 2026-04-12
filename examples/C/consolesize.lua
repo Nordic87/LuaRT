@@ -1,8 +1,10 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example calling Windows API functions 'GetConsoleScreenBufferInfo()' to get console size in characters
 --
 
-local c = require "c"
+
+import c
 
 local kernel32 = c.Library("kernel32.dll")
 

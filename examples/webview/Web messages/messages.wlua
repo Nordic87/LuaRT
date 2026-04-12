@@ -1,6 +1,9 @@
-local ui = require "ui"
-require "webview"
+--! luart-extensions
+--
+-- LuaRT Webview Web Messages example
+--
 
+import ui, webview
 sys.currentdir = sys.File(arg[0]).path
 
 local win = ui.Window("Webview Web Messages test", "fixed", 640, 540)
@@ -35,5 +38,5 @@ end
 
 win:center()
 
-ui.run(win):wait()
+await win:showasync()
 

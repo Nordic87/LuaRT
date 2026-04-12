@@ -1,10 +1,9 @@
+--! luart-extensions
 -- 
 -- LuaRT moving ball example  : Move a red ball using arrow keys
 --
 
-local ui = require "ui"
-local kb = require "keyboard"
-require "canvas"
+import ui, keyboard, canvas
 
 local win = ui.Window("keyboard example - Move the ball using arrow keys", "fixed", 410, 464)
 
@@ -18,27 +17,24 @@ local bg = c:Image(sys.File(arg[0]).path.."back.png")
 x = c.width/2
 y = c.height/2
 
--- start the ui updating Task
-ui.run(win)
-
 -- start the keyboard handler Task
-async(function()
+async function kbhandler()
     while win.visible do
-        if kb.isdown("LEFT") and x > 11 then
+        if keyboard.isdown("LEFT") and x > 11 then
             x = x - 6
         end
-        if kb.isdown("RIGHT") and x < c.width-11 then
+        if keyboard.isdown("RIGHT") and x < c.width-11 then
             x = x + 6
         end
-        if kb.isdown("UP") and y > 10 then
+        if keyboard.isdown("UP") and y > 10 then
             y = y - 5
         end
-        if kb.isdown("DOWN") and y < c.height-10 then
+        if keyboard.isdown("DOWN") and y < c.height-10 then
             y = y + 5
         end
         sleep()
     end
-end)
+end
 
 -- Canvas onPaint() event
 function c:onPaint()
@@ -51,6 +47,11 @@ function c:onPaint()
     self:fillcircle(x, y, 7, 0xFF0000FF)
     self:flip()
 end
+
+win:showasync()
+
+--launch the kbhandler Task
+kbhandler()
 
 -- wait for all tasks to finish
 waitall()

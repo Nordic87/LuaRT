@@ -1,5 +1,5 @@
-local ui = require "ui"
-local audio = require "audio"
+--! luart-extensions
+import ui, audio
 
 local win = ui.Window("Audio module example", 320, 200)
 local button = ui.Button(win, "Play Windows logon sound")
@@ -9,4 +9,4 @@ function button:onClick()
     audio.play(sys.env.WINDIR.."\\Media\\Windows Logon.wav")
 end
 
-ui.run(win):wait()
+await win:showasync()

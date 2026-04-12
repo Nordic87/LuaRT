@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 --  luaRT dir.lua example
 --  alternative to the "dir" Windows command
 --
-local console = require "console"
+import console
 
 local function format_int(number)
   local i, j, minus, int, fraction = tostring(number):ufind('([-]?)(%d+)([.]?%d*)')

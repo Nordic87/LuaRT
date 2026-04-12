@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example that uses 2 unions to use RGBA color value
 --
 
-local c = require "c"
+import c
 
 -- Defines a RGBA Struct C definition
 local RGBA = c.Struct("CCCC", "red", "green", "blue", "alpha")

@@ -1,7 +1,8 @@
+--! luart-extensions
 --
 --  luaRT Hello World example
 --
 
-local ui = require "ui"
+import ui
 
 ui.msg("Hello World !", "Luart example")

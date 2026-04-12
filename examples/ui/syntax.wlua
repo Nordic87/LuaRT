@@ -1,12 +1,13 @@
+--! luart-extensions
 --
 --  luaRT syntax.lua example
 --  A syntax higlighting Edit widget
 --  Author: Samir Tine
 --
 
-local ui = require "ui"
+import ui
 
-local SyntaxEdit = Object(ui.Edit)
+local class SyntaxEdit(ui.Edit)
 
 
 function SyntaxEdit:constructor(...)
@@ -102,9 +103,8 @@ button:hide()
 win:show()
 
 repeat
-    ui.update()
     if factor < 1 then 
-        factor = factor + 0.05
+        factor = factor + 0.1
         img:resize(factor)
         img:center()
         if factor >= 1 then
@@ -112,6 +112,7 @@ repeat
             button:show()
         end
     end
+    sleep()
 until win.visible == false]]
 
 function checkerror(err)
@@ -136,7 +137,4 @@ end
 
 win:show()
 
--- update user interface
-repeat
-	ui.update()
-until not win.visible
+await ui.task

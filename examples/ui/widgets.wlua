@@ -1,5 +1,7 @@
+--! luart-extensions
 -- LuaRT example that shows widgets from ui module
-local ui = require "ui"
+
+import ui
 
 -- create a window
 local win = ui.Window("LuaRT ui widgets demo", 320, 200)
@@ -38,10 +40,12 @@ function combobox:onSelect(item)
     end
 end
 
-demo_win:show()
 
 function demo_win:onClose()
     return not win.visible
 end
 
-ui.run(win):wait()
+demo_win:show()
+win:show()
+
+await ui.task

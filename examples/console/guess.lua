@@ -1,9 +1,10 @@
+--! luart-extensions
 --
 --  luaRT guess.lua example
 --  Guess a word game
 --
 
-local console = require 'console'
+import console
 
 function title(msg)
 	local length = math.floor((console.width-string.len(msg))/2)

@@ -1,9 +1,10 @@
-﻿--
+--! luart-extensions
+--
 --  luaRT lang.lua example
 --  Hello World in multiple languages
 --
 
-local console = require 'console'
+import console
 
 function title(msg)
 	local length = math.floor((console.width-string.len(msg))/2)

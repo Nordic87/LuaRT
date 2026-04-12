@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example manipulating a Struct that contains an array of structs`
 --
 
-local c = require "c"
+import c
 
 -- Helper function to print Array content
 local function print_RECT(title, rect)

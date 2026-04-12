@@ -1,7 +1,8 @@
-local ui = require "ui"
+--! luart-extensions
+import ui
 
 -- create a new widget based on ui.Entry
-local LabeledEntry = Object(ui.Entry)
+local class LabeledEntry(ui.Entry)
 
 -- create a constructor
 function LabeledEntry:constructor(parent, text, x, y, width, height)
@@ -18,8 +19,4 @@ function entry:onSelect()
 	ui.info("Welcome "..entry.text)
 end
 
-win:show()
-
-repeat
-	ui.update()
-until not win.visible
+await win:showasync()

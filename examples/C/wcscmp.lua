@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example calling 'wcscmp()' C function
 --
 
-local c = require "c"
+import c
 
 -- use the C runtime library
 local ucrt = c.Library()

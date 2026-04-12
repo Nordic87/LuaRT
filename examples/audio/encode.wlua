@@ -1,7 +1,8 @@
-local ui = require("ui")
+--! luart-extensions
+
+import ui, audio, sysutils
+
 local win = ui.Window("Audio recording sample", 333, 111, "single")
-local audio = require("audio")
-local sysutils = require("sysutils")
 
 local recBtn = ui.Button(win, "Start recording")
 recBtn:center()
@@ -12,7 +13,7 @@ stopBtn:center()
 stopBtn.y = stopBtn.y+6
 stopBtn.enabled = false
 
-local list = ui.Combobox(win, false, {"wav", "mp3"}, recBtn.x + recBtn.width+18, recBtn.y + recBtn.height/2)
+local list = ui.Combobox(win, false, {"wav", "mp3"}, recBtn.x + recBtn.width+18, recBtn.y + recBtn.height//2)
 list.selected = list.items["mp3"]
 list.width = 60
 
@@ -34,4 +35,4 @@ function stopBtn:onClick()
     sysutils.shellexec("open",sys.currentdir.."\\sound."..list.text)
 end
 
-ui.run(win):wait()
+await win:showasync()

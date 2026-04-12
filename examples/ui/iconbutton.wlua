@@ -1,4 +1,5 @@
-local ui = require "ui"
+--! luart-extensions
+import ui
 
 -- create a simple Window 
 local win = ui.Window("Button.hastext sample", 320, 200)
@@ -20,7 +21,7 @@ function button:onClick()
 	end
 end
 
+win:show()
+
 -- update user interface
-repeat
-	ui.update()
-until not win.visible
+await ui.task

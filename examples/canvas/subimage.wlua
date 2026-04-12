@@ -1,9 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT Canvas example : Image.drawsub()
 --
 
-local ui = require "ui"
-require "canvas"
+import ui, canvas
 
 -- create a simple Window
 local win = ui.Window("Image:drawsub sample", "fixed", 500, 400)
@@ -40,7 +40,6 @@ function canvas:onPaint()
   end
   
   self:flip()
-  sleep()
   
   if subimages[1].dy > 400 then
     win:hide()
@@ -48,4 +47,4 @@ function canvas:onPaint()
   
 end
 
-ui.run(win):wait()
+await win:showasync()

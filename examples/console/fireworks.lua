@@ -1,8 +1,9 @@
+--! luart-extensions
 -- ASCII Fireworks for LuaRT
 -- adapted from QB64 forum example by Onyx, from https://community.luart.org
 -- thanks to original authors : Bplus, Pete and TempodiBasic
 
-local console = require "console"
+import console
 
 console.fullscreen = true
 console.fontsize = 22
@@ -73,7 +74,7 @@ while not console.keyhit do
     for i = 1, rocs do
         r[i]:draw(i)
     end
-   sleep(1)
+   sleep()
 end
 
 console.clear()

@@ -1,14 +1,14 @@
+--! luart-extensions
 --
 -- LuaRT asynchronous zip extraction example
 --
 
-local net = require "net"
-local compression = require "compression"
+import net, compression
 
 -- Download LuaRT 1.8.0 x64 from GitHub
 print("Downloading LuaRT 1.8.0...")
-local client, response = await(net.Http("https://github.com"):download("/samyeyo/LuaRT/releases/download/v1.8.0/LuaRT-1.8.0-x64.zip"))
-if response.status ~= 200 then
+local client, response = await net.Http("https://github.com"):download("/samyeyo/LuaRT/releases/download/v1.8.0/LuaRT-1.8.0-x64.zip")
+if not response or response.status ~= 200 then
     error(net.error)
 end
 
@@ -28,12 +28,14 @@ task.after = function(result)
 end
 
 -- Launch a new Task during archive extraction (that prints several "." characters)
-async(function()
+local async function extract()
     io.write("Extracting "..response.file.name)
     while not task.terminated do
         io.write(".")
         sleep()
     end
-end)
+end
+
+extract()
 
 waitall()

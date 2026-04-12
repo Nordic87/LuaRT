@@ -1,5 +1,5 @@
-local ui = require "ui"
-require "canvas"
+--! luart-extensions
+import ui, canvas
 
 ui.theme = "dark"
 
@@ -56,4 +56,4 @@ function canvas:onPaint()
     self:flip()
 end
 
-ui.run(win):wait()
+await win:showasync()

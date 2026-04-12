@@ -1,8 +1,8 @@
+--! luart-extensions
 -- LuaRT stamp example
 -- Blit an Image on the canvas when the user clicks on it
 
-local ui = require "ui"
-require "canvas"
+import ui, canvas
 
 local win = ui.Window("Canvas stamp example", 640, 480)
 
@@ -26,5 +26,4 @@ end
 
 c.onClick = c.onHover
 
-ui.run(win):wait()
-
+await win:showasync()

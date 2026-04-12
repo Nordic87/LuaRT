@@ -1,4 +1,5 @@
-local ui = require "ui"
+--! luart-extensions
+import ui
 
 ui.theme = "dark"
 
@@ -6,7 +7,7 @@ ui.theme = "dark"
 local win = ui.Window(" File list sample", 320, 300)
 
 -- Define a FileList widget
-FileList = Object(ui.List)
+local FileList = Object(ui.List)
 
 function FileList:constructor(parent, path, ...)
   local list = ui.List.constructor(self, parent, {}, ...)
@@ -35,7 +36,6 @@ function FileList:constructor(parent, path, ...)
       else
         files[#files+1] = item
       end
-      sleep()
     end
     list:clear()
     self:append(dir)
@@ -48,7 +48,6 @@ function FileList:constructor(parent, path, ...)
       i = i + 1
       if i == 32 then -- sleep() only each 32 entry to speedup
         i = 1
-        sleep()
       end
       local item = self:add(entry.name)
       item:loadicon(entry.fullpath)
@@ -69,4 +68,4 @@ end
 local fl = FileList(win)
 fl.align = "all"
 
-ui.run(win):wait()
+await win:showasync()

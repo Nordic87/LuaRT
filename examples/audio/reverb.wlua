@@ -1,5 +1,6 @@
-local ui = require "ui"
-local audio = require "audio"
+--! luart-extensions
+
+import ui, audio
 
 local win = ui.Window("Reverb effect example", 320, 200)
 local button = ui.Button(win, "Play logon sound")
@@ -23,4 +24,4 @@ function ch:onClick()
     end
 end
 
-ui.run(win):wait()
+await win:showasync()

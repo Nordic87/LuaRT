@@ -1,6 +1,7 @@
+--! luart-extensions
 -- LuaRT Notepad example
 
-local ui = require "ui"
+import ui
 
 -- Main Window object
 local win = ui.Window("Untitled - LuaRT Notepad")
@@ -205,4 +206,4 @@ win:shortcut("n", FileNew.onClick, true)
 Edit:onChange()
 
 ---------------------------- Main loop
-ui.run(win):wait()
+await win:showasync()

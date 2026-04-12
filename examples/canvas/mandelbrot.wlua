@@ -1,5 +1,5 @@
-local ui = require "ui"
-require "canvas"
+--! luart-extensions
+import ui, canvas
 
 local win = ui.Window("Canvas - Mandelbrot fractal example", "fixed", 512, 360)
 local c = ui.Canvas(win)
@@ -53,4 +53,4 @@ function c:onPaint()
   end
 end
 
-ui.run(win):wait()
+await win:showasync()

@@ -1,10 +1,10 @@
+--! luart-extensions
 -- 
 -- LuaRT Webview Chrome DevTools Protocol : sets a Runtime.consoleAPICalled event handler
 --
 
-local ui = require "ui"
-local json = require "json"
-require "webview"
+import ui, webview
+import json
 
 local win = ui.Window("Chrome Devtools Protocol events example", "fixed", 320, 240)
 local wv = ui.Webview(win, 0, 0, 320, 200)
@@ -39,4 +39,4 @@ function wv:onReady()
     wv.cdp.Runtime.enable()
 end
 
-ui.run(win):wait()
+await win:showasync()

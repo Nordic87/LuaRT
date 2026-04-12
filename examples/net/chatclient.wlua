@@ -1,8 +1,9 @@
+--! luart-extensions
 -- Echo client example
 -- Using non blocking sockets and asynchronous tasks
 
-local net = require "net"
-local ui = require "ui"
+import net
+import ui
 
 local win = ui.Window("Chat client", 320, 200, "fixed")
 local edit = ui.Edit(win, "", 4, 2, 312, 173)
@@ -29,17 +30,18 @@ end
 
 function win:onShow()
     edit:append("Connecting... ")
-    if await(client:connect()) then
+    if await client:connect() then
         edit:append("done !\nConnected to the server !\n")
-        async(function()
+        local async function update()
             while true do
-                local msg = await(client:recv()) or error("Network error: "..net.error)
-                edit:append(msg.."\n")
+                local msg = await client:recv() 
+                edit:append((msg or error("Network error: "..net.error)).."\n")
             end
-        end)
+        end
+        update()
     else
         error("Network error: failed to connect to the server")
     end
 end
 
-ui.run(win):wait()
+await win:showasync()

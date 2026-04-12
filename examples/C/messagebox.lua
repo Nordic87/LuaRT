@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example calling Windows API MessageBoxW() function
 --
 
-local c = require "c"
+import c
 
 -- load the user32 library
 local user32 = c.Library("user32.dll")

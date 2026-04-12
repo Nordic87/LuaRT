@@ -1,5 +1,10 @@
-local ui = require "ui"
-require "webview"
+--! luart-extensions
+--
+-- FluentUI application with LuaRT
+-- Displays some system information using FluentUI design in a Webview
+--
+
+import ui, webview
 
 sys.currentdir = sys.File(arg[0]).path
 
@@ -17,15 +22,11 @@ sys.Pipe("wmic computersystem get TotalPhysicalMemory"):read(2000).after = funct
     wv:postmessage('{ "id": "memorysize", "text": "'..ram.." Gb"..'"}', true)
 end
 
-function win:onClose()
-    sys.exit(0)
-end
-
 function wv:onLoaded()
     wv:postmessage('{ "id": "memorysize", "text": "'..ram.." Gb"..'"}', true)
-    wv:postmessage('{ "id": "cpuname", "text": "'..sys.registry.read('HKEY_LOCAL_MACHINE', 'Hardware\\Description\\System\\CentralProcessor\\0', 'ProcessorNameString')..'"}', true)
+    wv:postmessage('{ "id": "cpuname", "text": "${sys.registry.read("HKEY_LOCAL_MACHINE", "Hardware\\Description\\System\\CentralProcessor\\0", "ProcessorNameString")}" }', true)
     wv:postmessage(' {"show": true}')
-    wv:postmessage('{ "id": "graphic", "text": "'..(sys.registry.read('HKEY_LOCAL_MACHINE', 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WinSAT', 'PrimaryAdapterString') or "Not available")..'"}', true)
+    wv:postmessage('{ "id": "graphic", "text": "${sys.registry.read("HKEY_LOCAL_MACHINE", "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WinSAT", "PrimaryAdapterString") or "Not available"}" }', true)
     win:show()
     wv:show()
 end
@@ -52,6 +53,4 @@ end
 
 win:center()
 
-while true do
-    sleep()
-end
+await ui.task

@@ -1,5 +1,10 @@
-local ui = require "ui"
-require "webview"
+--! luart-extensions
+--
+-- LuaRT animated Hello World example using Webview
+--
+
+
+import ui, webview
 
 sys.currentdir = sys.File(arg[0]).path
 local win = ui.Window("Hello World with Webview example", 640, 540)
@@ -9,4 +14,4 @@ wv.align = "all"
 
 win:center()
 
-ui.run(win):wait()
+await win:showasync()

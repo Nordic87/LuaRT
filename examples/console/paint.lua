@@ -1,6 +1,7 @@
+--! luart-extensions
 -- luaRT example : paint.lua
 
-local console = require "console"
+import console
 
 local colors = { "black", "blue", "green", "cyan", "red", "purple", "yellow", "white", "gray",
 "lightblue", "lightgreen", "lightcyan", "lightred", "lightpurple", "lightyellow", "brightwhite"}

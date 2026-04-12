@@ -1,5 +1,5 @@
-local ui = require "ui"
-require "webview"
+--! luart-extensions
+import ui, webview
 
 sys.currentdir = sys.File(arg[0]).path
 
@@ -18,4 +18,4 @@ function wv:onReady()
     wv.acceleratorkeys = false
 end
 
-ui.run(win):wait()
+await win:showasync()

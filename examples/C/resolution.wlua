@@ -1,9 +1,10 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example calling Windows API functions 'GetDesktopWindow()' and 'GetWindowRect()'
 --
 
-local ui = require "ui"
-local c = require "c"
+import ui
+local c = require("c")
 
 -- load the user32 library
 local user32 = c.Library("user32.dll")

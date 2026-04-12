@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT drag and drop example 
 --
 
-local ui = require "ui"
+import ui
 
 local win = ui.Window("Drop files and folders", 300, 200)
 
@@ -23,4 +24,4 @@ function filelist:onDrop(kind, content)
     end
 end
 
-ui.run(win):wait()
+await win:showasync()

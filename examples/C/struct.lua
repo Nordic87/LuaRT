@@ -1,8 +1,9 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example manipulating a C Struct 
 --
 
-local c = require "c"
+import c
 
 -- Helper function to print a RECT struct content
 local function print_RECT(title, rect)

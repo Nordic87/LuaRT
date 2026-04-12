@@ -1,11 +1,11 @@
+--! luart-extensions
 --
 -- LuaRT C FFI example to calculate Fibonacci series using Lua numbers and C.Values
 -- C.Values calculation are way slower than with Lua numbers
 -- If you want to calculate from C.Values, convert to number with Values:tonumber() method
 --
 
-local c = require "c"
-local console = require "console"
+import c, console
 
 local function benchmark(lang, func, ...)
   local start = sys.clock()
