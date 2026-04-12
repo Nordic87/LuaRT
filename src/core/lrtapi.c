@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | lrtapi.c | LuaRT API implementation
@@ -12,7 +12,10 @@
 #include <Task.h>
 #include "lrtapi.h"
 #include "sys\async.h"
+#include "lpreprocess.h"
 #include <windows.h>
+
+static lua_State *mainL = NULL;
 
 //-------------------------------------------------[UTF8 strings conversion functions]
 char *wchar_toutf8(const wchar_t *str, int *len) {
@@ -77,6 +80,8 @@ LUA_API Task *lua_pushtask(lua_State *L, lua_KFunction taskfunc, void *userdata,
 	if (gc)
 		t->gc_func = gc;
 	lua_pushvalue(L, -1);
+	t->taskref = luaL_ref(L, LUA_REGISTRYINDEX);
+	lua_pushvalue(L, -1);
 	if (lua_pcall(L, 0, 0, 0))
 		lua_error(L);
 	return t;	
@@ -98,10 +103,6 @@ static int module_error(lua_State *L) {
 
 LUALIB_API void luaL_require(lua_State *L, const char *modname) {
 	luaL_requiref(L, modname, module_error, 0);
-}
-
-LUA_API void lua_setupdate(lua_CFunction func) {
-	set_lua_update(func);
 }
 
 //-------------------------------------------------[lua_schedule() function]
@@ -140,17 +141,22 @@ LUA_API int lua_taskcount() {
 	return task_count();
 }
 
+//-------------------------------------------------[lua_starttask() function]
+LUA_API int lua_starttask(lua_State *L, Task *t, int nargs) {
+	return start_task(L, t, nargs);
+}
+
 //-------------------------------------------------[lua_sleep() function]
 int do_sleep(lua_State *L, lua_Integer delay) {
-	Task *t = search_task(L);
+    Task *t = search_task(L);
 
-	t->sleep =  GetTickCount64() + delay;
-	t->status = TSleep;
-	if (lua_isyieldable(L))
-		return lua_yield(L, 0);
-	else while (t->status == TSleep)
-		update_tasks(L);
-	return 0;
+    t->sleep  = GetTickCount64() + delay;
+    t->status = TSleep;
+    if (lua_isyieldable(L))
+        return lua_yield(L, 0);
+    else while (t->status == TSleep)
+        update_tasks(L);
+    return 0;
 }
 
 LUA_API void lua_sleep(lua_State *L, lua_Integer delay) {
@@ -162,6 +168,46 @@ LUA_API Task *lua_gettask(lua_State *L) {
 }
 
 //-------------------------------------------------[LuaRT Extended base library]
+
+//----------------------------------[ load() function supporting language extensions ]
+LUA_METHOD(luaB, load) {
+    size_t len;
+    const char *src = luaL_checklstring(L, 1, &len);
+    const char *chunkname = luaL_optstring(L, 2, src);
+    const char *mode = luaL_optstring(L, 3, "bt");
+
+    const char *buffer = src;
+    char *transformed = NULL;
+
+    if (!(len >= 4 && memcmp(src, LUA_SIGNATURE, 4) == 0)) {
+        transformed = preprocess_lua(L, src);
+        if (!transformed) {
+            lua_pushnil(L);
+            lua_insert(L, -2);
+            lua_concat(L, 2);
+            return 2;
+        }
+        buffer = transformed;
+        len = strlen(transformed);
+    }
+    int status = luaL_loadbufferx(L, buffer, len, chunkname, mode);
+    
+    if (transformed) 
+        free(transformed);
+
+    if (status == LUA_OK) {
+        if (!lua_isnone(L, 4)) { 
+            lua_pushvalue(L, 4);
+            if (!lua_setupvalue(L, -2, 1))
+                lua_pop(L, 1); 
+        }        
+        return 1;
+    }
+
+    lua_pushnil(L);
+    lua_insert(L, -2);
+    return 2;
+}
 
 //----------------------------------[ await() function ]
 LUA_METHOD(luaB, await) {
@@ -183,7 +229,6 @@ LUA_METHOD(luaB, sleep) {
 	do_sleep(L, luaL_optinteger(L, 1, 1));
 	return 0;
 }
-
 //----------------------------------[ waitall() ]
 LUA_METHOD(luaB, waitall) {	
 	return waitall_tasks(L);
@@ -249,7 +294,7 @@ int obj_each_iter(lua_State *L) {
 	return results-1;
 }
 
-static int luaB_each (lua_State *L) {
+static int luaB_each(lua_State *L) {
 	int type = lua_type(L, 1);
 	if (type == LUA_TFUNCTION)
 		lua_pushvalue(L, 1);
@@ -272,7 +317,6 @@ static int luaB_each (lua_State *L) {
 }
 
 //-------------------------------------------------[type() function]
-
 LUA_API const char *lua_objectname(lua_State *L, int idx) {
 	if (luaL_getmetafield(L, idx, "__name")) {
 		const char *typename = lua_tostring(L, -1);
@@ -291,8 +335,20 @@ static int luaB_type (lua_State *L) {
 }
 #endif
 
-//-------------------------------------------------[super() function]
+LUA_API void lua_stop(void) {
+	static BOOL stopped = FALSE;
+	if (!stopped) {
+		stopped = TRUE;
+		if (lua_getfield(mainL, LUA_REGISTRYINDEX, "atexit") == LUA_TFUNCTION) {
+			if (lua_pcall(mainL, 0, 0, 0))
+				fputs(lua_tostring(mainL, -1), stderr);
+		}
+		lua_close(mainL);
+		CoUninitialize();
+	}
+}
 
+//-------------------------------------------------[super() function]
 static int luaB_super(lua_State *L) {
 	if (!lua_super(L, 1))
 		lua_pushnil(L);
@@ -328,7 +384,6 @@ static int luaB_Object(lua_State *L) {
 }
 
 //----------------------------[debug.settaskhook() function]
-
 static int settaskhook(lua_State *L) {
 	if (lua_isnoneornil(L, 1)) {
     	lua_pushnil(L);
@@ -368,8 +423,9 @@ static const luaL_Reg baselib_ext[] = {
 #ifndef RTCOMPAT
   	{"rawget", luaB_rawget},
   	{"rawset", luaB_rawset},
-	{"type",	luaB_type},
-#endif
+  	{"type",	luaB_type},
+#endif	
+  	{"load",	luaB_load},
 	{NULL, NULL}
 };
 
@@ -398,9 +454,9 @@ static const luaL_Reg def_libs[] = {
   {NULL, NULL}
 };
 
-LUALIB_API void luaL_openlibs(lua_State *L) {
+LUALIB_API void lua_openmodules(lua_State *L) {
 	const luaL_Reg *lib;
-
+	mainL = L;
 	for (lib = def_libs; lib->func; lib++) {
 		luaL_requiref(L, lib->name, lib->func, 1);
 		lua_pop(L, 1);
@@ -417,4 +473,11 @@ LUALIB_API void luaL_openlibs(lua_State *L) {
 	lua_pushcfunction(L, settaskhook);
 	lua_setfield(L, -2, "settaskhook");
 	lua_pop(L, 1);
+	lua_getglobal(L, "package");
+	lua_getfield(L, -1, "searchers");
+	lua_rawgeti(L, -1, 2);
+	original_searcher_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+	lua_pushcfunction(L, lua_preload_searcher);
+	lua_rawseti(L, -2, 2);
+	lua_pop(L, 2);
 }
