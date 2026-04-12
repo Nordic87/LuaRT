@@ -1,7 +1,7 @@
 
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Zip.c | LuaRT Zip object implementation
@@ -27,7 +27,14 @@
 luart_type TZip;
 
 const char *zip_modes[] = { "read", "append", "write", "delete", NULL };
-struct zip_t *fs = NULL;
+typedef struct {
+	struct zip_t *zip;
+	wchar_t       tmp[MAX_PATH];
+	HANDLE        hMap;
+	HANDLE        hFile;
+	uint8_t       *map;
+} ZipFs;
+ZipFs fs = {0};
 
 char *checkEntry(lua_State *L, int idx, luart_type t) {
 	char *str = NULL;
@@ -70,7 +77,7 @@ LUA_CONSTRUCTOR(Zip) {
 		z->mode = 'r';
 		goto done;
 	} else {
-		level = luaL_optint(L, 4, MZ_DEFAULT_COMPRESSION);
+		level = luaL_optinteger(L, 4, MZ_DEFAULT_COMPRESSION);
 		idx = luaL_checkoption(L, 3, "read", zip_modes);
 		fname = checkFilename(L, 2);
 		mode = *zip_modes[idx];
@@ -126,11 +133,11 @@ LUA_METHOD(Zip, reopen) {
 	Zip *z = lua_self(L, 1, Zip);
 	char mode;
 	
-	if (fs && (z->zip == fs))
+	if (fs.zip && (z->zip == fs.zip))
 		luaL_error(L, "cannot reopen bundled Zip archive");
 	mode = *zip_modes[luaL_checkoption(L, 2, "read", zip_modes)];
 	zip_close(z->zip);
-	z->level = luaL_optint(L, 3, MZ_DEFAULT_COMPRESSION);
+	z->level = luaL_optinteger(L, 3, MZ_DEFAULT_COMPRESSION);
 	if ( (z->zip = zip_open(z->fname, z->level, mode)))
 		z->mode = mode;
 	else luaL_error(L, strerror(errno));
