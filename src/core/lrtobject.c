@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | lrtobject.c | LuaRT C API object implementation
@@ -9,8 +9,9 @@
 #define LUA_LIB
 
 #include <lua\lua.h>
+#include <lua\lauxlib.h>
+#include "lua\llimits.h"
 #include <luart.h>
-#include <Widget.h>
 #include "lrtapi.h"
 #include <stdlib.h>
 #include <windows.h>
@@ -92,6 +93,23 @@ int lua_super(lua_State *L, int idx) {
 	return 0;
 }
 
+static int super_proxy_cont(lua_State *L, int status, lua_KContext ctx) {
+    int self_ref = (int)ctx;
+    
+    lua_rawgeti(L, LUA_REGISTRYINDEX, self_ref);
+    int results = lua_gettop(L) - 1;                
+    lua_getmetatable(L, -1);                    
+    lua_getfield(L, -1, "__ancestors");
+    int len = (int)luaL_len(L, -1);
+    lua_rawgeti(L, -1, len);
+    lua_setfield(L, -3, "__super");
+    lua_pushnil(L);
+    lua_rawseti(L, -2, len);
+    lua_pop(L, 3);                                 
+    luaL_unref(L, LUA_REGISTRYINDEX, self_ref); 
+    return results;
+}
+
 static int super_proxy(lua_State *L) {
 	int len, nargs = lua_gettop(L);
 
@@ -112,17 +130,20 @@ static int super_proxy(lua_State *L) {
 		lua_pushvalue(L, lua_upvalueindex(2));
 		lua_insert(L, 2);
 		lua_pop(L, 1);
-		lua_call(L, nargs, LUA_MULTRET);
-		lua_getmetatable(L, 1);
-		lua_getfield(L, -1, "__ancestors");
-		len = luaL_len(L, -1);
-		lua_rawgeti(L, -1, len);
-		lua_setfield(L, -3, "__super");
-		lua_pushnil(L);
-		lua_rawseti(L, -2, len);
-		lua_pop(L, 2);
-	}
-	else {
+		lua_pushvalue(L, 1);
+        int self_ref = luaL_ref(L, LUA_REGISTRYINDEX);        
+        lua_callk(L, nargs, LUA_MULTRET, (lua_KContext)self_ref, super_proxy_cont);
+        
+        lua_getmetatable(L, 1);
+        lua_getfield(L, -1, "__ancestors");
+        len = (int)luaL_len(L, -1);
+        lua_rawgeti(L, -1, len);
+        lua_setfield(L, -3, "__super");
+        lua_pushnil(L);
+        lua_rawseti(L, -2, len);
+        lua_pop(L, 2);
+        luaL_unref(L, LUA_REGISTRYINDEX, self_ref);
+    } else {
 		lua_pushvalue(L, lua_upvalueindex(2));
 		lua_insert(L, 1);
 		lua_call(L, nargs, LUA_MULTRET);
@@ -277,7 +298,6 @@ LUA_METHOD(module, __newindex) {
 }
 
 LUA_API void lua_registermodule(lua_State *L, const char *name, const luaL_Reg *functions, const luaL_Reg *properties, lua_CFunction finalizer) {
-	luaL_checkversion(L);
 	lua_createtable(L, 0, 3);
 	luaL_setrawfuncs(L, functions);
 	lua_createtable(L, 0, 4);
@@ -285,7 +305,6 @@ LUA_API void lua_registermodule(lua_State *L, const char *name, const luaL_Reg *
 	lua_pushstring(L, name);
 	lua_rawset(L, -3);
 	lua_pushstring(L, "__properties");
-	luaL_checkversion(L);
 	lua_createtable(L, 0, 3);
 	luaL_setrawfuncs(L, properties);
 	lua_rawset(L, -3);
