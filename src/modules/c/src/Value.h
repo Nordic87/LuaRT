@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Value.h | LuaRT Value object header
@@ -22,7 +22,7 @@ typedef enum {
 } ctype;
 
 static const char *csig[] = {
-	"C", "c", "w", "B", "s", "S", "i", "I", "j", "l", "J", "L", "L", "#", "j", "l", "S", "J", "L", "f", "d", "z", "p", "W", ".", "u", NULL};
+	"C", "c", "w", "B", "s", "S", "i", "I", "j", "l", "J", "L", "L", "#", "j", "l", "S", "J", "L", "f", "d", "Z", "p", "W", ".", "u", NULL};
 
 static const int csizes[] = {
 	sizeof(unsigned char), sizeof(char), sizeof(wchar_t), sizeof(BOOL), sizeof(short), sizeof(unsigned short), sizeof(int), sizeof(unsigned int), sizeof(long), sizeof(long long), sizeof (unsigned long), sizeof(unsigned long long), sizeof(size_t), sizeof(int16_t), sizeof(int32_t), sizeof(int64_t), sizeof(uint16_t), sizeof(uint32_t), sizeof(uint64_t), sizeof(float), sizeof(double), 1, 1, 2
