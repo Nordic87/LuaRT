@@ -1,6 +1,6 @@
 --[[
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | makedist.lua | Builds the LuaRT setup executable
@@ -33,7 +33,7 @@ local function file_add(fname, line)
     file:close()
 end
 
-copy("../../bin/lua54.dll", "bin/lua54.dll")
+copy("../../bin/lua55.dll", "bin/lua55.dll")
 copy("../../bin/luart.exe", "bin/luart.exe")
 copy("../../bin/rtc.exe", "bin/rtc.exe")
 copy("../../bin/wrtc.exe", "bin/wrtc.exe")
@@ -93,7 +93,7 @@ z:write(parent.."/tools/LuaRT-Studio/README.md", "LuaRT-Studio/README.md")
 z:write(parent.."/tools/LuaRT-Studio/LICENSE", "LuaRT-Studio/LICENSE")
 z:write(parent.."/tools/LuaRT-Studio/LuaRT Studio.exe", "LuaRT-Studio/LuaRT Studio.exe")
 console.write("■")
-z:write(parent.."/tools/QuickRT/lua54.dll", "QuickRT/lua54.dll")
+z:write(parent.."/tools/QuickRT/lua55.dll", "QuickRT/lua55.dll")
 console.write("■")
 z:write(parent.."/tools/QuickRT/QuickRT.exe", "QuickRT/QuickRT.exe")
 console.write("■")
@@ -107,7 +107,9 @@ z:write(parent.."/tools/RTBuilder/widgets/", "RTBuilder/widgets")
 console.write("■")
 z:write(parent.."/tools/RTBuilder/config.json", "RTBuilder/config.json")
 console.write("■")
-z:write(parent.."/bin/lua54.dll", "RTBuilder/lua54.dll")
+z:write(parent.."/bin/lua55.dll", "RTBuilder/lua55.dll")
+console.write("■")
+z:write(parent.."/tools/RTBuilder/tracker.dll", "RTBuilder/tracker.dll")
 console.write("■")
 z:write(parent.."/tools/RTBuilder/RTBuilder.exe", "RTBuilder/RTBuilder.exe")
 console.write("■")

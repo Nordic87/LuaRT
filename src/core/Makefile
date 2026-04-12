@@ -1,5 +1,5 @@
 ﻿# | LuaRT - A Windows programming framework for Lua
-# | Copyright (c) Tine Samir 2025
+# | Copyright (c) Tine Samir 2026
 # | See Copyright Notice in LICENSE.TXT
 # |--------------------------------------------------------------
 # | LuaRT Core Makefile for the toolchain, the Core framework and the tools
@@ -18,7 +18,7 @@
 # | Usage (default x86 release build)		 : nmake x86
 # |-------------------------------------------------------------
 
-VERBOSE= 2>&1 >nul
+VERBOSE = 2>&1 >nul
 
 PLATFORM=
 
@@ -28,7 +28,6 @@ PLATFORM=x86
 PLATFORM=x64
 !endif
 
-
 #---- Configuration
 RM= del /Q
 CC= cl
@@ -36,7 +35,6 @@ LD= link
 LB= lib
 
 DEST= ..\..\bin
-
 
 !if "$(PLATFORM)" == "x64"
 _ARCH = x64
@@ -46,7 +44,7 @@ _ARCH = x86
 
 #---- LuaRT version
 LUART_MAJOR= 2
-LUART_MINOR= 1
+LUART_MINOR= 2
 LUART_RELEASE= 0
 !if "$(VERSION)" == ""
 VERSION=$(LUART_MAJOR).$(LUART_MINOR).$(LUART_RELEASE)
@@ -66,13 +64,13 @@ PROGRESS= "■"
 
 DLL_LIBS =	shlwapi.lib advapi32.lib gdi32.lib comctl32.lib kernel32.lib user32.lib oleaut32.lib ole32.lib credui.lib crypt32.lib wininet.lib shell32.lib
 
-LIBS	= 		..\..\lib\lua54.lib ole32.lib comctl32.lib shell32.lib user32.lib
-LIBS_STATIC	= 	..\..\lib\lua54-static.lib ole32.lib comctl32.lib shell32.lib shlwapi.lib advapi32.lib gdi32.lib comctl32.lib kernel32.lib user32.lib oleaut32.lib crypt32.lib
+LIBS	= 		..\..\lib\lua55.lib ole32.lib comctl32.lib shell32.lib user32.lib
+LIBS_STATIC	= 	..\..\lib\lua55-static.lib ole32.lib comctl32.lib shell32.lib shlwapi.lib advapi32.lib gdi32.lib comctl32.lib kernel32.lib user32.lib oleaut32.lib crypt32.lib
 
 #---- Source files
-LUA_A=		..\..\bin\lua54.dll
+LUA_A=		..\..\bin\lua55.dll
 LUA_O=		lua\lapi.obj lua\lcode.obj lua\lctype.obj lua\ldebug.obj lua\ldo.obj lua\ldump.obj lua\lfunc.obj lua\lgc.obj lua\llex.obj lua\lmem.obj lua\lobject.obj lua\lopcodes.obj lua\lparser.obj lua\lstate.obj lua\lstring.obj lua\ltable.obj lua\ltm.obj lua\lundump.obj lua\lvm.obj lua\lzio.obj	
-LIB_O=		lua\lauxlib.obj lua\lbaselib.obj lua\lcorolib.obj lua\ldblib.obj lua\lmathlib.obj lua\loadlib.obj lua\ltablib.obj string\string.obj string\lstrlib.obj sys\sys.obj console\console.obj lua\liolib.obj lua\loslib.obj lua\lutf8lib.obj compression\compression.obj compression\Zip.obj compression\lib\zip.obj lrtapi.obj lrtobject.obj sys\Date.obj sys\File.obj sys\Pipe.obj sys\Directory.obj sys\Buffer.obj sys\Com.obj lembed.obj sys\async.obj sys\Task.obj
+LIB_O=		lua\lauxlib.obj lua\lbaselib.obj lua\lcorolib.obj lua\ldblib.obj lua\lmathlib.obj lua\loadlib.obj lua\ltablib.obj string\string.obj string\lstrlib.obj sys\sys.obj console\console.obj lua\liolib.obj lua\loslib.obj lua\lutf8lib.obj compression\compression.obj compression\Zip.obj compression\lib\zip.obj lpreprocess.obj lrtapi.obj lrtobject.obj sys\Date.obj sys\File.obj sys\Pipe.obj sys\Directory.obj sys\Buffer.obj sys\Com.obj lembed.obj sys\async.obj sys\Task.obj
 
 BASE_O= 	$(LUA_O) $(LIB_O)
 ALL_O= 		$(BASE_O)
@@ -99,7 +97,7 @@ default: toolchain
 
 infolua: utf8
 	@cmd /c echo.
-	@echo|set /p dummy="▸  Building Lua 5.4.8 VM          "
+	@echo|set /p dummy="▸  Building Lua 5.5.0 VM          "
 
 infocore:
 	@cmd /c echo.
@@ -138,13 +136,13 @@ lua\lvm.obj:
 	@$(CC) /nologo /MD /Gy /GF /Oi /GA /c /O2 /Fo$@ lua\lvm.c $(VERBOSE)
 !endif
 
-..\..\lib\lua54-static.lib: $(LUART_T) 
+..\..\lib\lua55-static.lib: $(LUART_T) 
 	@..\..\bin\luart.exe lua\static\export_h.lua $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
 	@$(CC) /c lua\static\lib.cpp $(CFLAGS) /Folua\static\lib.obj $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
-	@$(LB) lua\static\lib.obj /OUT:lua54-static.lib $(VERBOSE)
-	@-copy /Y lua54-static.lib "..\..\lib\lua54-static.lib" >nul
+	@$(LB) lua\static\lib.obj /OUT:lua55-static.lib $(VERBOSE)
+	@-copy /Y lua55-static.lib "..\..\lib\lua55-static.lib" >nul
 	@echo|set /p dummy=$(PROGRESS)
 
 ..\..\bin\luart-static.exe: $(BASE_O)
@@ -162,7 +160,7 @@ lua\lvm.obj:
 	@echo|set /p dummy=$(PROGRESS)
 	@-copy /Y wluart-static.exe "$(DEST)\wluart-static.exe" >nul
 
-static: infostatic ..\..\lib\lua54-static.lib ..\..\bin\luart-static.exe ..\..\bin\wluart-static.exe
+static: infostatic ..\..\lib\lua55-static.lib ..\..\bin\luart-static.exe ..\..\bin\wluart-static.exe
 	@$(CC) /c $(CFLAGS) lua\loadlib.c /Folua\loadlib.obj $(VERBOSE)
 
 tools: toolchain $(RTC_T)
@@ -171,8 +169,8 @@ tools: toolchain $(RTC_T)
 $(LUA_A): infotoolchain $(BASE_O)
 	@$(LD) /ignore:4217 /DLL $(LDFLAGS) $(BASE_O) $(DLL_LIBS) /OUT:$@ $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
-	@-move /Y ..\..\bin\lua54.lib "..\..\lib\lua54.lib" >nul
-	@-$(RM) ..\..\bin\lua54.exp >nul 2>&1
+	@-move /Y ..\..\bin\lua55.lib "..\..\lib\lua55.lib" >nul
+	@-$(RM) ..\..\bin\lua55.exp >nul 2>&1
 
 $(LUART_T): $(LUA_A)
 	@rc /fo .\\resource.res $(DEFINES_RES) /r /v /i "lua/" resources/resource.rc >nul 2>&1
@@ -208,14 +206,14 @@ $(RTC_T): toolchain static ..\..\tools\rtc\src\rtc.lua ..\..\modules\ui\ui.dll
 	@rc /fo .\\resource.res $(DEFINES_RES) /r /v /d RTC /i "lua/" resources/resource.rc >nul 2>&1
 	@echo|set /p dummy=$(PROGRESS)
 	@$(CC) /DRTSTATIC $(CFLAGS) /DRTC luart.c /link /ignore:4217 $(LDFLAGS) resource.res $(BASE_O) $(LIBS_STATIC) /OUT:luart.exe $(VERBOSE)
-	@luart.exe ..\..\tools\rtc\src\rtc.lua ..\..\tools\rtc\src\rtc.lua -o rtc.exe ..\..\tools\rtc\src -L..\..\modules\ $(VERBOSE)
+	@luart.exe ..\..\tools\rtc\src\rtc.lua ..\..\tools\rtc\src\rtc.lua -o rtc.exe ..\..\tools\rtc\src -L..\modules\ $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
 	@rc /fo .\\resource.res $(DEFINES_RES) /r /v /d RTC /d RTWIN /i "lua/" resources/resource.rc >nul 2>&1
 	@echo|set /p dummy=$(PROGRESS)
 	@$(CC) /DRTSTATIC /c $(CFLAGS) lua\loadlib.c /Folua\loadlib.obj $(VERBOSE)
 	@$(CC) /c /DRTSTATIC /DRTWIN /DRTC $(CFLAGS) luart.c /Fowluart.obj $(VERBOSE)
 	@$(CC) /DRTSTATIC /DRTWIN /DRTC $(CFLAGS) luart.c resource.res $(BASE_O) $(LIBS_STATIC) /link /ignore:4217 $(LDFLAGS) /OUT:wluart-static.exe /SUBSYSTEM:windows $(VERBOSE)
-	@luart.exe ..\..\tools\rtc\src\rtc.lua ..\..\tools\rtc\src\rtc.lua -o wrtc.exe ..\..\tools\rtc\src -w -s -i ..\..\tools\rtc\src\img\rtc.ico -L..\..\..\modules\ -lui $(VERBOSE)
+	@luart.exe ..\..\tools\rtc\src\rtc.lua ..\..\tools\rtc\src\rtc.lua -o wrtc.exe ..\..\tools\rtc\src -w -s -i ..\..\tools\rtc\src\img\rtc.ico -L..\modules -lui $(VERBOSE)
 	@$(CC) /c $(CFLAGS) lua\loadlib.c /Folua\loadlib.obj $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
 	@-copy /Y rtc.exe "$(DEST)\rtc.exe" >nul	
@@ -226,36 +224,37 @@ $(RTC_T): toolchain static ..\..\tools\rtc\src\rtc.lua ..\..\modules\ui\ui.dll
 
 buildtools: $(RTC_T)
 	@cd ..\..\tools\RTBuilder
+	@nmake.bat clean >nul 2>&1
 	@nmake.bat $(BUILD) "LUART_PATH=%CD%/../.."
 	@cd ..\..\src\core	
 	@echo|set /p dummy="▸  Building QuickRT/LuaRT Studio  "
 	@echo|set /p dummy=$(PROGRESS)
-	@..\..\bin\rtc -i ..\..\tools\QuickRT\contrib\quickrt.ico ..\..\tools\QuickRT\src\quickrt.lua -o ..\..\tools\QuickRT\QuickRT.exe ..\..\tools\QuickRT\src -lui $(VERBOSE)
+	@-..\..\bin\rtc -i ..\..\tools\QuickRT\contrib\quickrt.ico ..\..\tools\QuickRT\src\quickrt.lua -o ..\..\tools\QuickRT\QuickRT.exe ..\..\tools\QuickRT\src -lui $(VERBOSE)
 	@-signtool.exe sign /sha1 "4b47f71722cd511bc491e11f5a4130cb779f98f6" /tr http://time.certum.pl /td sha256  /fd sha256 /v "..\..\tools\QuickRT\QuickRT.exe" $(VERBOSE)
-	@-copy /Y ..\..\bin\lua54.dll ..\..\tools\QuickRT\lua54.dll >nul	
+	@-copy /Y ..\..\bin\lua55.dll ..\..\tools\QuickRT\lua55.dll >nul	
 	@echo|set /p dummy=$(PROGRESS)	
 	@$(CC) /DRTCOMPAT /DLUA_BUILD_AS_DLL $(CFLAGS) /c /Folrtapi.obj lrtapi.c $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
 	@$(CC) /DRTWIN /DLUA_BUILD_AS_DLL $(CFLAGS) /c /Fosys\File.obj sys\File.c $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)	
-	@$(LD) /DLL $(LDFLAGS) $(DLL_LIBS) $(BASE_O) /ignore:4217 /OUT:lua54.dll $(VERBOSE)
+	@$(LD) /DLL $(LDFLAGS) $(DLL_LIBS) $(BASE_O) /ignore:4217 /OUT:lua55.dll $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
 	@$(CC) /DLUA_BUILD_AS_DLL $(CFLAGS) /c /Folrtapi.obj lrtapi.c $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
 	@$(CC) /DLUA_BUILD_AS_DLL $(CFLAGS) /c /Fosys\File.obj sys\File.c $(VERBOSE)
-	@$(CC) $(CFLAGS) luart.c /link $(LDFLAGS) lua54.lib ole32.lib comctl32.lib shell32.lib resource.res /OUT:luart.exe  $(VERBOSE)
+	@$(CC) $(CFLAGS) luart.c /link $(LDFLAGS) lua55.lib ole32.lib comctl32.lib shell32.lib resource.res /OUT:luart.exe  $(VERBOSE)
 	@-xcopy "..\..\tools\LuaRT-Studio\$(PLATFORM)\*" "..\..\tools\LuaRT-Studio" /s /e /Y >nul 2>&1
 	@-copy /Y luart.exe ..\..\tools\LuaRT-Studio\bin\luart.exe >nul
 	@-copy /Y ..\..\bin\wrtc.exe ..\..\tools\LuaRT-Studio\bin\wrtc.exe >nul
-	@-copy /Y lua54.dll ..\..\tools\LuaRT-Studio\bin\lua54.dll >nul	
+	@-copy /Y lua55.dll ..\..\tools\LuaRT-Studio\bin\lua55.dll >nul	
 	@echo|set /p dummy=$(PROGRESS)
 	-@rd ..\..\tools\LuaRT-Studio\examples /s /q 
 	@xcopy ..\..\examples ..\..\tools\LuaRT-Studio\examples\ /s /e /y >nul
 	@echo|set /p dummy=$(PROGRESS)
 	@xcopy ..\..\modules ..\..\tools\LuaRT-Studio\modules\ /s /e /y >nul
 	@echo|set /p dummy=$(PROGRESS)
-	@..\..\bin\rtc.exe -s -w -o rtcheck.exe -lnet -lui -i ..\..\setup\img\update.ico ..\..\setup\update.lua ..\..\setup\img\ 2>&1 >nul
-	@-signtool.exe sign /sha1 "4b47f71722cd511bc491e11f5a4130cb779f98f6" /tr http://time.certum.pl /td sha256  /fd sha256 /v "rtcheck.exe" $(VERBOSE)
+	@..\..\bin\rtc.exe -s -w -o rtcheck.exe -lnet -lui -i ..\..\setup\img\update.ico ..\..\setup\update.lua ..\..\setup\img $(VERBOSE)
+	@-signtool sign /sha1 "4b47f71722cd511bc491e11f5a4130cb779f98f6" /tr http://time.certum.pl /td sha256  /fd sha256 /v "rtcheck.exe" $(VERBOSE)
 	@-copy /Y rtcheck.exe ..\..\tools\LuaRT-Studio\bin\rtcheck.exe 2>&1 >nul
 	@-move /Y rtcheck.exe ..\..\bin 2>&1 >nul
 	@echo|set /p dummy=$(PROGRESS)
@@ -263,7 +262,7 @@ buildtools: $(RTC_T)
 
 sign: buildtools
 	@-signtool sign /sha1 "4b47f71722cd511bc491e11f5a4130cb779f98f6" /tr http://time.certum.pl /td sha256  /fd sha256 /v  ..\..\bin\*.exe $(VERBOSE)
-	@-signtool sign /sha1 "4b47f71722cd511bc491e11f5a4130cb779f98f6" /tr http://time.certum.pl /td sha256  /fd sha256 /v ..\..\bin\lua54.dll $(VERBOSE)
+	@-signtool sign /sha1 "4b47f71722cd511bc491e11f5a4130cb779f98f6" /tr http://time.certum.pl /td sha256  /fd sha256 /v ..\..\bin\lua55.dll $(VERBOSE)
 	@-signtool sign /sha1 "4b47f71722cd511bc491e11f5a4130cb779f98f6" /tr http://time.certum.pl /td sha256  /fd sha256 /v ..\..\tools\LuaRT-Studio\bin\*.dll $(VERBOSE)
 	@-signtool sign /sha1 "4b47f71722cd511bc491e11f5a4130cb779f98f6" /tr http://time.certum.pl /td sha256  /fd sha256 /v ..\..\tools\LuaRT-Studio\bin\*.exe $(VERBOSE)
 
@@ -276,7 +275,7 @@ setup: sign infosetup
 	@cmd /c echo.
 
 clean: utf8
-	@echo|set /p dummy="▸  Cleaning Lua 5.4 VM... "
+	@echo|set /p dummy="▸  Cleaning Lua 5.5 VM... "
 	@-$(RM) $(BASE_O) >nul 2>&1
 	@echo ✓
 	@echo|set /p dummy="▸  Cleaning LuaRT Core framework... "
@@ -290,9 +289,9 @@ clean: utf8
 	@-$(RM) ..\..\bin\*.exp >nul 2>&1
 	@-$(RM) ..\..\bin\*.lib >nul 2>&1
 	@-$(RM) ..\..\bin\*.ilk >nul 2>&1
-	@-$(RM) lua54.* >nul 2>&1
+	@-$(RM) lua55.* >nul 2>&1
 	@-$(RM) resource.res >nul 2>&1
-	@-$(RM) ..\..\lib\lua54.lib >nul 2>&1
+	@-$(RM) ..\..\lib\lua55.lib >nul 2>&1
 	@-$(RM) $(ALL_T) >nul 2>&1
 	@-$(RM) $(LUART_T) >nul 2>&1
 	@-$(RM) $(LUAWRT_T)  >nul 2>&1
@@ -312,7 +311,7 @@ clean: utf8
 	@-$(RM) ..\..\tools\rtc\src\*.exe >nul 2>&1
 	@-$(RM) ..\..\setup\luaRT.zip >nul 2>&1
 	@-$(RM) ..\..\tools\QuickRT\QuickRT.exe >nul 2>&1
-	@-$(RM) ..\..\tools\QuickRT\lua54.dll >nul 2>&1
+	@-$(RM) ..\..\tools\QuickRT\lua55.dll >nul 2>&1
 	@-$(RM) LuaRT-$(VERSION)-x64.* >nul 2>&1
 	@-$(RM) LuaRT-$(VERSION)-x86.* >nul 2>&1
 	@-$(RM) ..\..\LuaRT-$(VERSION)-x64.* >nul 2>&1

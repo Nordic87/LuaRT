@@ -1,5 +1,5 @@
 ﻿# | webview module for LuaRT
-# | Luart.org, Copyright (c) Tine Samir 2025.
+# | Luart.org, Copyright (c) Tine Samir 2026.
 # | See Copyright Notice in LICENSE.TXT
 # |--------------------------------------------------------------
 # | Makefile
@@ -9,7 +9,7 @@
 # | Usage (debug build) 		  			 : make debug
 # | Usage (clean all)	 				 	 : make clean
 # |-------------------------------------------------------------
-VERBOSE= >nul 2>&1
+VERBOSE = >nul 2>&1
 
 MODULE=		webview
 VERSION=	1.5
@@ -21,7 +21,7 @@ OBJ_C=		$(SRC_C:.c=.obj)
 OBJ=		$(OBJ_CPP) $(OBJ_C)
 
 CFLAGS = /std:c++17 /EHsc
-LUALIB= "$(LUART_PATH)\lib\lua54.lib"
+LUALIB= "$(LUART_PATH)\lib\lua55.lib"
 
 !if "$(BUILD)" == "debug"
 CFLAGS = /nologo /DLUA_BUILD_AS_DLL /D_WIN32_WINNT=0x0600 /DLUA_COMPAT_5_3 /DLUA_ARCH=\"$(_ARCH)\" /DLUART_MINOR=$(LUART_MINOR) /DLUART_MAJOR=$(LUART_MAJOR) /DLUART_RELEASE=$(LUART_RELEASE) /I."/WebView/include" /I"$(LUART_PATH)\include" /I"." /Z7 $(CFLAGS)
@@ -31,7 +31,7 @@ VERBOSE=
 PROGRESS= 
 !else
 !if "$(BUILD)" == "static"
-LUALIB= "$(LUART_PATH)\lib\lua54-static.lib"
+LUALIB= "$(LUART_PATH)\lib\lua55-static.lib"
 CFLAGS = /nologo /DRTSTATIC /DLUA_BUILD_AS_DLL /D_WIN32_WINNT=0x0600 /DLUA_COMPAT_5_3 /DLUA_ARCH=\"$(_ARCH)\" /DLUART_MINOR=$(LUART_MINOR) /DLUART_MAJOR=$(LUART_MAJOR) /DLUART_RELEASE=$(LUART_RELEASE) /I."/WebView/include" /I"$(LUART_PATH)\include" /I"." /MD /Gy /GF /GR- /GL /GS- /Oi /O1 /GA $(CFLAGS)
 LDFLAGS= /nologo /ignore:4217 /OPT:REF /OPT:ICF /LTCG /NODEFAULTLIB:libcmt
 MODNAME=$(MODULE)-static
