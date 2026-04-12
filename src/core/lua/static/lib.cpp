@@ -12,6 +12,11 @@ class Initializer {
 			for(int i=0;i<sizeof(LuaFunctionNames) / sizeof(LuaFunctionNames[0]);i++)
 				((void**)&staticlua)[i] = GetProcAddress((HMODULE)hModule, LuaFunctionNames[i]);
 		}
+
+		~Initializer() {
+        	lua_stop();
+    	}
+
 };
 		
 static Initializer globalInitializer;

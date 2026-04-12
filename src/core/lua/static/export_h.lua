@@ -40,6 +40,8 @@ local vars = {}
 for _,file in ipairs(files) do
 	local f = assert(io.open(file, "r"))
 	local data = f:read("*all")
+	data = data:gsub('#ifdef __cplusplus\nextern "C" {\n#endif', "") -- remove extern C
+	data = data:gsub('#ifdef __cplusplus\n}\n#endif', "") -- remove extern C
 	data = data:gsub("/%*%*%*.-%*%*%*/", function(a) out('\n%s\n',a) return "" end) -- exports copyright
 	data = data:gsub("/%*.-%*/", "") -- remove comments to simplify parsing
 	data = data:gsub('#include ".-\n', "") -- remove local includes
@@ -61,7 +63,7 @@ for _,file in ipairs(files) do
 	data = data:gsub("LUA%w*_API%s+([%w_%*%s]-)%s*([%(%w_%)]+)%s*%((.-)%);", function(type, name, args)
 		if #type == 0 then
 			type = name
-			_, _, name, args = args:find("([%w_]-)%)%s*%((.*)")
+			__, __, name, args = args:find("([%w_]-)%)%s*%((.*)")
 		end
 		name = name:match("%((.-)%)") or name
 		fcts[#fcts+1] = name
@@ -91,7 +93,8 @@ end
 out '} lua_All_functions;\n\n'
 out 'extern lua_All_functions staticlua;\n\n'
 
-out '#ifdef __cplusplus\n}\n#endif\n\n'
+out '#ifdef __cplusplus\n}\n#endif\n#endif\n'
+
 outfile:close()
 
 outfile = assert(io.open(dstCfile, "w"))
@@ -108,3 +111,5 @@ extern "C" static const char* const LuaFunctionNames[] =
 ]], table.concat(fcts, '",\n\t"')..'",\n\t"'..table.concat(var_names, '",\n\t"'), "")
 out("lua_All_functions staticlua;")
 outfile:close()
+
+print("Generated "..dstHfile.." and "..dstCfile)
