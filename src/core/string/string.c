@@ -1,9 +1,9 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
- | string.c | LuaRT string module based adapted from Lua 5.4 string module
+ | string.c | LuaRT string module based adapted from Lua 5.5 string module
 */
 
 #define lstrlib_c
@@ -23,6 +23,7 @@
 
 #include "lrtapi.h"
 #include <luart.h>
+#include "..\lua\llimits.h"
 
 /* macro to 'unsign' a character */
 #define uchar(c)	((unsigned char)(c))
