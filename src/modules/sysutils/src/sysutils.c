@@ -25,7 +25,7 @@ LUA_METHOD(sysutils, diskusage)
       lua_pushinteger(L, (lua_Integer)freeBytesAvail.QuadPart);
       lua_pushinteger(L, (lua_Integer)totalBytesAvail.QuadPart);
   } else {
-    luaL_pushfail(L);
+    lua_pushnil(L);
     nresult = 1;
   }
   free(diskname);
@@ -192,6 +192,7 @@ LUA_PROPERTY_GET(sysutils, drives) {
   char drives[MAX_PATH] = {0}; 
   char name[MAX_PATH], fs[MAX_PATH];
   DWORD serial, flags;
+  char hexserial[9];
   DWORD count = GetLogicalDriveStrings(MAX_PATH, drives);
   int n = 0;
 
@@ -203,9 +204,12 @@ LUA_PROPERTY_GET(sysutils, drives) {
         lua_setfield(L, -2, "root");
         lua_pushstring(L, drivetype[GetDriveTypeA(drive)]);
         lua_setfield(L, -2, "type");
-        GetVolumeInformationA((const char*)drive, name, MAX_PATH, NULL, NULL, &flags, fs, MAX_PATH);
+        GetVolumeInformationA((const char*)drive, name, MAX_PATH, &serial, NULL, &flags, fs, MAX_PATH);
         lua_pushstring(L, name);
         lua_setfield(L, -2, "name");
+        sprintf(hexserial, "%08X", serial);
+        lua_pushstring(L, hexserial);
+        lua_setfield(L, -2, "serial");
         lua_pushstring(L, fs);
         lua_setfield(L, -2, "filesystem");
         lua_pushboolean(L, flags & FILE_READ_ONLY_VOLUME);
@@ -438,7 +442,7 @@ int __declspec(dllexport) luaopen_sysutils(lua_State *L)
     fid[0] = FOLDERID_System;
     fid[1] = FOLDERID_ProgramFiles;
     fid[2] = FOLDERID_Windows;
-    fid[4] = FOLDERID_Videos;
+    fid[3] = FOLDERID_Videos;
     fid[4] = FOLDERID_Startup;
     fid[5] = FOLDERID_StartMenu;
     fid[6] = FOLDERID_SendTo;
