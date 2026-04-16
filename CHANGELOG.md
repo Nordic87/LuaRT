@@ -1,3 +1,103 @@
+## LuaRT v2.2.0 (Apr 06 2026)
+
+#### Highlights 
+- Lua VM updated to 5.5
+- New optional source preprocessor with language extensions (`async function`, `class`, `try/catch`, string interpolation with `${}`, `import`)
+- New `capture` module for camera/video capture (requires Windows 10+)
+- New LuaRT interpreters options `-p`, `-l`, `-v`
+- Various additions and bugfixes
+
+#### Lua VM
+- Updated to Lua VM 5.5
+
+#### Language Extensions (Preprocessor)
+- Optional preprocessor that expands to standard Lua code
+- Preserves Lua 5.5 compatibility by default
+- New: `--! luart-extensions` comment at first line to activate the LuaRT preprocessor
+- New: `async function name(args) ... end` syntax for async task factories
+- New: `await expr` syntax for awaiting tasks
+- New: `import mod.path` syntax for requiring modules
+- New: `class Name { ... }` and `class Name(Parent) { ... }` syntax for Object definition
+- New: `try ... catch err ... end` syntax for simple error handling
+- New: String interpolation with `"hello ${name}"` syntax
+- New: LuaRT interpreter `-p` CLI option to preprocess a file and print output to stdout
+
+#### LuaRT interpreters
+- New: `-l name` option to require a library before running the script
+- New: `-v` option to show version information
+- Fixed: requiring for binary modules on `x86` won't crash anymore
+
+#### rtc
+- Updated: Faster loading time for compiled executables startup
+- Updated: embedded content is now obfuscated (simple encryption)
+- Fixed: Now Lua files included in the embedded content are *really* compiled to Lua bytecode
+- Fixed: multiple compiled executables instances can now execute at the same time
+- Fixed: multiple compiled executables with different LuaRT versions can now execute at the same time
+
+#### LuaRT C API
+- New: `lua_starttask()` to start a Task from C
+- New: `luaL_loadfilep()` for preprocessor-aware file loading
+
+#### sys module
+- New: `sys.TaskFactory(fn)` for method-style async functions
+- New: `sys.tasks` property to get a list of all active tasks
+- Fixed: `sys.clipboard.content` text is no more trimed by one character
+- Updated: `COM` object now supports using properties with parameters (using a function call)
+- Updated: `Buffer`concatenation now returns a Lua `string`
+
+#### console module
+- Fixed: Flushing `console.stdin` works now as expected
+
+#### capture module
+- New `capture` module for camera and video capture
+- New `capture.devices` property to enumerate video and audio devices
+- New `Camera` object to record video (with preview widget if `ui` module is already loaded)
+- New `Camera:snapshot(path)` method to take a photo
+- New `Camera.record.start()` and `Camera.record.stop()` methods for video recording
+
+#### ui module
+- New: `ui.task` is a Task object that manages ui updates in the background
+- New: `Window:showasync()` method to show the Window with a helper Task that ends when the Window hides.
+- New: `Edit.textlimit` and `Edit.textlength` property
+- New: Drag and drop support with `Listbox:onDropItem()` and `Tree:onDropItem()` events
+- New: `List:insert()`,  `Tab:insert()`, `Tree:insert()`, `Combobox:insert()` methods (buggy with icons...)
+- New: `ListItem:move()`, `TreeItem:move()`, `TabItem:move()`, `ComboboxItem:move()` methods (buggy with icons...)
+- Removed: `ui.run()` function have been removed (use now `ui.task` or `Window:showasync()`)
+- Fixed: No more random `ui` module crashes on `x86` 
+- Fixed: `ui` won't crash when some custom Windows messages are received
+- Fixed: `Button` clicks won't beep anymore
+- Fixed: `tooltip` is now correctly dark/light themed
+- Fixed: `ui.opendialog()` and `ui.savedialog()` are now modals as expected
+- Fixed: `Edit:onChange()` and `Entry:onChange()` won't go in an onChange() loop anymore
+
+#### net module
+- Fixed: `Http` requests with large content are no more truncated
+
+#### sysutils module
+- Updated: `sysutils.drives` now returns serial number of each drive in the `hexserial` field
+
+#### webview module
+- Fixed: `Webview` now uses correctly embedded content for requests
+
+#### c module (FFI)
+- Fixed: `c.sizeof()` and `c.Array()` now accepts the `'Z'` character as a correct C type
+
+#### serial module
+- Fixed: `Port.stopbits` now is correctly sets to `one` by default
+
+#### sqlite module
+- Fixed: `db.query()` now always release statement memory
+
+#### json module
+- Fixed: `json:save()` now correctly returns `false` in case of error
+
+#### xml module
+- Fixed: XML attributes now works as expected
+
+#### yaml module
+- Fixed: `save()` and `encode()` functions now preserves tabulations and hierarchy
+
+
 ## LuaRT v2.1.0 (Sept 11 2025)
 
 #### Highlights 

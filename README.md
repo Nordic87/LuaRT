@@ -2,7 +2,7 @@
 
 ![LuaRT][title] 
 
-[![Lua VM 5.4.8](https://badgen.net/badge/Lua%20VM/5.4/yellow)](https://www.lua.org/)
+[![Lua VM 5.5](https://badgen.net/badge/Lua%20VM/5.5/yellow)](https://www.lua.org/)
 ![Windows](https://badgen.net/badge/Windows/Windows%208.1+/blue?icon=windows)
 [![LuaRT license](https://badgen.net/badge/License/MIT/green)](#license)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/af54881b3d764f5ea210a5419fb96086)](https://www.codacy.com/gh/samyeyo/LuaRT/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=samyeyo/LuaRT&amp;utm_campaign=Badge_Grade)  
@@ -106,7 +106,7 @@ There have been many hours of hard work put into LuaRT. Your support will be gre
   
 ## :small_blue_diamond:License
   
-LuaRT is copyright (c) 2025 Samir Tine.
+LuaRT is copyright (c) 2026 Samir Tine.
 LuaRT is open source, released under the MIT License.
 See full copyright notice in the LICENSE.txt file.
 
