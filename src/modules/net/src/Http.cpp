@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Http.cpp | LuaRT Http object implementation
@@ -99,44 +99,49 @@ static void ProcessRequest(Http *h, DWORD *error) {
                         *error = GetLastError();
                     break;                
                     
-                case REQ_STATE_RESPONSE_RECV_DATA:   
+                case REQ_STATE_RESPONSE_RECV_DATA: {
                     DWORD statusCode = 0, statusLen = sizeof(statusCode);
-
                     if (!HttpQueryInfoA(h->hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &statusCode, &statusLen, NULL)) {
                         *error = GetLastError();
                         break;
                     }
 
                     if (statusCode == 204) {
-                        h->state = REQ_STATE_COMPLETE;
+completed:              h->state = REQ_STATE_COMPLETE;
                         h->done = true;
                         h->started = GetTickCount() - h->started;
                         goto done;
                     }
-                                
-                    DWORD len;
+
                     INTERNET_BUFFERS ib;
+                    DWORD len;
 
                     ZeroMemory(&ib, sizeof(INTERNET_BUFFERS));
                     ib.dwStructSize = sizeof(INTERNET_BUFFERS);
                     ib.lpvBuffer = h->inbuffer;
                     ib.dwBufferLength = sizeof(h->inbuffer) - 1;
-                    if(!InternetReadFileExA(h->hRequest, &ib, IRF_SYNC | IRF_NO_WAIT, (LPARAM)h))
-                        if ((*error = GetLastError()) == ERROR_IO_PENDING)
+
+                    if (!InternetReadFileExA(h->hRequest, &ib, IRF_SYNC | IRF_NO_WAIT, (LPARAM)h)) {
+                        *error = GetLastError();
+                        if (*error == ERROR_IO_PENDING)
                             break;
-                    len = ib.dwBufferLength;
-                    if (len == 0) {
-                        h->state = REQ_STATE_COMPLETE;
-                        h->done = true;
-                        h->started = GetTickCount()-h->started;
-                        goto done;
                     }
-                    if(h->file)
+
+                    if (statusCode == 204)
+                        goto completed;
+
+                    len = ib.dwBufferLength;
+                    if (len == 0)
+                        goto completed;
+
+                    if (h->file)
                         fwrite(h->inbuffer, 1, len, h->file);
                     else
-                        h->received.append(h->inbuffer);
+                        h->received.append(h->inbuffer, len);
+
                     h->recvsize += len;
                     break;
+                }
             }
         } 
     } else  *error = ERROR_OPERATION_ABORTED;
@@ -270,7 +275,7 @@ LUA_PROPERTY_GET(Http, hostname) {
 	Http *http = lua_self(L, 1, Http);
 	if (http->handle)
 		lua_pushstring(L, http->host.c_str());
-	else luaL_pushfail(L);
+	else lua_pushnil(L);
 	return 1;
 }
 
@@ -279,7 +284,7 @@ LUA_PROPERTY_GET(Http, port) {
 	Http *http = lua_self(L, 1, Http);
 	if (http->handle)
 		lua_pushinteger(L, http->port);
-	else luaL_pushfail(L);
+	else lua_pushnil(L);
 	return 1;
 }
 
