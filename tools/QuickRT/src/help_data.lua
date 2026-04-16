@@ -813,7 +813,7 @@
 			desc = [[ A string that will be capitalized. ]],
 			color = 'lightpurple'}, nil} },
 	['string module'] = {
-	desc = [[Strings in Luart are considered as containers for UTF8 characters, where in standard Lua, strings are containers for bytes, as explained in the Compatibility section The string module in Luart provides generic functions for string manipulation, such as finding and extracting substrings, and pattern matching.That means that all standard Lua strings functions can be used with UTF8 encoded strings using the standard Lua string functions : see the Lua 5.4 String module reference.The string module in Luart adds or modifies the following elements :]],
+	desc = [[Strings in Luart are considered as containers for UTF8 characters, where in standard Lua, strings are containers for bytes, as explained in the Compatibility section The string module in Luart provides generic functions for string manipulation, such as finding and extracting substrings, and pattern matching.That means that all standard Lua strings functions can be used with UTF8 encoded strings using the standard Lua string functions : see the Lua 5.5 String module reference.The string module in Luart adds or modifies the following elements :]],
 	addr = 'https:\\\\www.luart.org\\doc\\string\\index.html',
 	params = {} },
 	['Stringiterable'] = {
@@ -821,7 +821,7 @@
 	addr = 'https:\\\\www.luart.org\\doc\\string\\iterator.html',
 	params = {} },
 	['#Stringlength operator'] = {
-	desc = [[The length operator # has the same functionality as in standard Lua. As stated in the Lua 5.4 programming manual (see The Length Operator), the returned length of a string is its number of bytes. This behaviour is respected in Luart to preserve compatibility with standard Lua with ASCII characters. To get the length in characters of a string in Luart, do not use the # operator, use string.len() instead]],
+	desc = [[The length operator # has the same functionality as in standard Lua. As stated in the Lua 5.5 programming manual (see The Length Operator), the returned length of a string is its number of bytes. This behaviour is respected in Luart to preserve compatibility with standard Lua with ASCII characters. To get the length in characters of a string in Luart, do not use the # operator, use string.len() instead]],
 	addr = 'https:\\\\www.luart.org\\doc\\string\\length.html',
 	params = {} },
 	['string.lower(str)'] = {
@@ -2736,7 +2736,7 @@
 	addr = 'https:\\\\www.luart.org\\doc\\ui\\Entry-textalign.html',
 	params = {} },
 	['Entry.textlimit read/write property'] = {
-	desc = [[Get or set a number value, indicating the maximum length of the text entered. Setting the property with a value of 0, permits a maximum of 2ï> characters.]],
+	desc = [[Get or set a number value, indicating the maximum length of the text entered. Setting the property with a value of 0, permits a maximum of 2ï¿½> characters.]],
 	addr = 'https:\\\\www.luart.org\\doc\\ui\\Entry-textlimit.html',
 	params = {} },
 	['Entry.tooltip read/write property'] = {

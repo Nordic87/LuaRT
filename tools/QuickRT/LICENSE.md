@@ -1,5 +1,5 @@
 ### QuickRT - Powerful REPL for LuaRT
-#### Copyright (c) 2025 Samir Tine. All rights reserved.
+#### Copyright (c) 2026 Samir Tine. All rights reserved.
 #### https://www.luart.org/quickrt/
 
 QuickRT is free software distributed under the terms of the MIT license reproduced below; 
