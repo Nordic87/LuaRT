@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Port.c | LuaRT Port object implementation
@@ -393,7 +393,7 @@ LUA_PROPERTY_GET(Port, parity) {
 LUA_PROPERTY_SET(Port, stopbits) {
     Port *c = lua_self(L, 1, Port);
     if (c->status && GetCommState(c->hSerial, &c->dcb)) {
-        c->dcb.StopBits = luaL_checkoption(L, 2, "none", stopbits_modes); 
+        c->dcb.StopBits = luaL_checkoption(L, 2, "one", stopbits_modes); 
         SetCommState(c->hSerial, &c->dcb);
     }
     return 0;
