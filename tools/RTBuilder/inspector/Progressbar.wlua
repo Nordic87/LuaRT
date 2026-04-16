@@ -33,4 +33,4 @@ function Progressbar:range2str()
     return "{"..range.min..", "..range.max.."}"
 end
 
-return inspector:register(Progressbar, { themed = inspector.properties.boolean})
+return inspector:register(Progressbar, { themed = inspector.properties.boolean })

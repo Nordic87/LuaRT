@@ -46,7 +46,7 @@ RTBuilder should be easy to use :
 
 ## :small_blue_diamond:License
   
-RTBuilder is copyright (c) 2025 Samir Tine.
+RTBuilder is copyright (c) 2026 Samir Tine.
 RTBuilder for LuaRT is open source, released under the MIT License.
 
 See full copyright notice in the LICENSE file.

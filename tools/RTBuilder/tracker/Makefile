@@ -15,7 +15,7 @@ MODULE=		tracker
 VERSION=	0.5
 SRC= 		src\tracker.obj
 
-LUALIB= "$(LUART_PATH)\lib\lua54.lib"
+LUALIB= "$(LUART_PATH)\lib\lua55.lib"
 CFLAGS = 
 
 !if "$(BUILD)" == "debug"
@@ -26,7 +26,7 @@ VERBOSE=
 PROGRESS= 
 !else
 !if "$(BUILD)" == "static"
-LUALIB= "$(LUART_PATH)\lib\lua54-static.lib"
+LUALIB= "$(LUART_PATH)\lib\lua55-static.lib"
 CFLAGS = /nologo /DRTSTATIC /DLUA_BUILD_AS_DLL /D_WIN32_WINNT=0x0603 /DLUA_COMPAT_5_3 /DLUA_ARCH=\"$(_ARCH)\" /DLUART_MINOR=$(LUART_MINOR) /DLUART_MAJOR=$(LUART_MAJOR) /DLUART_RELEASE=$(LUART_RELEASE) /I"$(LUART_PATH)\include" /I"." /I"./src/include" /MD /Gy /GF /GR- /GL /GS- /Oi /O1 /GA $(CFLAGS)
 LDFLAGS= /nologo /ignore:4217 /LTCG /NODEFAULTLIB:libcmt
 MODNAME=$(MODULE)-static

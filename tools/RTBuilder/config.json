@@ -2,7 +2,7 @@
     "mainWindow" : {
         "WidgetTabs" : [
             { "Standard" : ["Label", "Button", "Checkbox", "Radiobutton", "Groupbox", "Panel", "Entry", "Edit", "List", "Tab", "Combobox", "Tree"] },
-            { "Additional" : ["Calendar", "Picture", "Progressbar", "Webview", "Canvas"] }
+            { "Additional" : ["Calendar", "Picture", "Progressbar", "Webview", "Canvas", "Camera"] }
         ]
     }
 }

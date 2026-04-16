@@ -2,7 +2,8 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
-#include <Widget.h>
+#include "../../../src/modules/ui/src/Widget.h"
+#include "../../../src/modules/ui/src/ui.h"
 
 #define IDTRACKER 255
 
@@ -189,12 +190,12 @@ LUA_CONSTRUCTOR(Tracker) {
 }
 
 LUA_METHOD(Tracker, stop) {
-  stoptracking(lua_self(L, 1, Widget));
+  stoptracking(lua_selfwidget(L, 1));
   return 0;
 }
 
 LUA_METHOD(Tracker, start) {
-  Widget *w, *self = lua_self(L, 1, Widget);
+  Widget *w, *self = lua_selfwidget(L, 1);
   RECT r;
  
   if (self->parent)
@@ -217,7 +218,7 @@ LUA_METHOD(Tracker, start) {
 }
 
 LUA_PROPERTY_GET(Tracker, widget) {
-  Widget *w = lua_self(L, 1, Widget);
+  Widget *w = lua_selfwidget(L, 1);
 	if (w->user)
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ((Widget*)GetWindowLongPtr(w->user, GWLP_USERDATA))->ref );
 	else lua_pushnil(L);
@@ -230,7 +231,7 @@ LUA_PROPERTY_SET(Tracker, widget) {
 }
 
 LUA_PROPERTY_GET(Tracker, x) {
-  Widget *w = lua_self(L, 1, Widget);
+  Widget *w = lua_selfwidget(L, 1);
   if (w->user) {
     RECT r;
     GetWindowRect(w->handle, &r);
@@ -242,7 +243,7 @@ LUA_PROPERTY_GET(Tracker, x) {
 }
 
 LUA_PROPERTY_GET(Tracker, y) {
-  Widget *w = lua_self(L, 1, Widget);
+  Widget *w = lua_selfwidget(L, 1);
   if (w->user) {
     RECT r;
     GetWindowRect(w->handle, &r);
@@ -254,7 +255,7 @@ LUA_PROPERTY_GET(Tracker, y) {
 }
 
 LUA_PROPERTY_GET(Tracker, width) {
-  Widget *w = lua_self(L, 1, Widget);
+  Widget *w = lua_selfwidget(L, 1);
   if (w->user) {
     RECT r;
     GetWindowRect(w->handle, &r);
@@ -266,7 +267,7 @@ LUA_PROPERTY_GET(Tracker, width) {
 }
 
 LUA_PROPERTY_GET(Tracker, height) {
-  Widget *w = lua_self(L, 1, Widget);
+  Widget *w = lua_selfwidget(L, 1);
   if (w->user) {
     RECT r;
     GetWindowRect(w->handle, &r);

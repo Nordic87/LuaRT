@@ -8,8 +8,6 @@ local VERSION = require "version"
 Widgets = {}
 onContext = {}
 
-sys.idleThreshold = 0
-
 filename = nil
 modified = false
 formWindow = nil
@@ -279,4 +277,4 @@ async(function()
     end
 end)
 
-ui.run(mainWindow):wait()
+mainWindow:showasync():wait()

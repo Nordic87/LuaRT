@@ -13,7 +13,8 @@
 TARGET=		RTBuilder
 VERSION=	0.5
 SRC= 		src\main.wlua src\version.lua src\dump.lua src\widgets.wlua  
-LIBS=		-ltracker -ljson -lui
+LIBS=		-L../../modules -L. -ltracker -ljson -lui
+VERBOSE=	2>&1 >nul
 
 ICON = resources\RTBuilder.ico
 
@@ -44,19 +45,19 @@ infomodule:
 tracker.dll:
 	@cd tracker
 	@nmake.bat
-	@-$(CP) tracker.dll ..\tracker.dll  2>&1 >nul
+	@-$(CP) /Y tracker.dll ..\tracker.dll 2>&1 >nul
 	@cd ..
 
 src\version.lua:
 	@echo return 'v$(VERSION)' > src\version.lua
 
 $(TARGET).exe: tracker.dll infomodule $(SRC)
-	@$(LC) $(SRC) -o $@ -i $(ICON) $(LIBS) 2>&1 >nul 
+	@$(LC) $(SRC) -o $@ -i $(ICON) $(LIBS) $(VERBOSE)
 	@echo|set /p dummy=$(PROGRESS)
-	@-$(CP) /Y "$(LUART_PATH)"\bin\lua54.dll 2>&1 >nul
+	@-$(CP) /Y "$(LUART_PATH)"\bin\lua55.dll 2>&1 >nul
 	@-$(CP) /Y "$(LUART_PATH)"\modules\webview\webview.dll widgets\webview.dll 2>&1 >nul
 	@-$(CP) /Y "$(LUART_PATH)"\modules\canvas\canvas.dll widgets\canvas.dll 2>&1 >nul
-	@-$(RM) tracker.dll 2>&1 >nul
+	@-$(CP) /Y "$(LUART_PATH)"\modules\capture\capture.dll widgets\capture.dll 2>&1 >nul
 	@echo|set /p dummy=$(PROGRESS)
 	@cmd /c echo.
 
@@ -65,7 +66,7 @@ clean:
 	@-$(RM) $(TARGET).exe >nul 2>&1 
 	@-$(RM) widgets/webview.dll >nul 2>&1 
 	@-$(RM) widgets/canvas.dll >nul 2>&1 
-	@-$(RM) lua54.dll >nul 2>&1 
+	@-$(RM) lua55.dll >nul 2>&1 
 	@cd tracker
 	@nmake.bat clean >nul 2>&1
 	@cd ..
