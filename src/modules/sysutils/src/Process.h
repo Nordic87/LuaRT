@@ -1,7 +1,7 @@
 
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Process.h | LuaRT Process object header
