@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Database.h | LuaRT Database object header
@@ -16,9 +16,11 @@
 //---------------- Database object
 
 typedef struct {
-    luart_type  type;
-	sqlite3		*database;
-    wchar_t     *fname;
+    luart_type      type;
+	sqlite3		    *database;
+    wchar_t         *fname;
+    sqlite3_stmt    **open_stmts;
+    int             open_stmt_count;
 } Database;
 
 extern luart_type TDatabase;

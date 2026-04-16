@@ -1,6 +1,6 @@
- /*
+/*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Database.c | LuaRT Database object implementation
@@ -39,7 +39,11 @@ LUA_CONSTRUCTOR(Database) {
 //-------------------------------------[ Database.close() ]
 LUA_METHOD(Database, close) {
 	Database *db = lua_self(L, 1, Database);
+	sqlite3_stmt *stmt = NULL;
+	while ((stmt = sqlite3_next_stmt(db->database, NULL)) != NULL)
+		sqlite3_finalize(stmt);
 	CHECK(db, sqlite3_close(db->database));
+	db->database = NULL;
 	return 0;
 }
 
@@ -50,7 +54,7 @@ static sqlite3_stmt *run_query(lua_State *L, Database *db) {
 	sqlite3_stmt *stmt;
 	int type, bind_count;
 	
-	CHECK(db, sqlite3_prepare16_v2(db->database, str, len*sizeof(wchar_t), &stmt, 0));
+	CHECK(db, sqlite3_prepare16_v2(db->database, str, -1, &stmt, 0));
 	free(str);
 	
 	if ((bind_count = sqlite3_bind_parameter_count(stmt)) > nargs-2)
@@ -86,13 +90,13 @@ static int push_row(lua_State *L, Database *db, sqlite3_stmt *stmt, int count) {
 				case SQLITE_INTEGER:	lua_pushinteger(L, sqlite3_column_int64(stmt, i)); break;
 				case SQLITE_FLOAT:		lua_pushnumber(L, sqlite3_column_double(stmt, i)); break;
 				case SQLITE_TEXT:		lua_pushwstring(L, sqlite3_column_text16(stmt, i)); break;
+				case SQLITE_NULL:		lua_pushnil(L); break;
 				default:				lua_pushlstring(L, sqlite3_column_blob(stmt, i), sqlite3_column_bytes(stmt, i));
 			}
 			lua_rawset(L, -3);
 		}
 		return 1;
 	}
-	CHECK(db, sqlite3_finalize(stmt));
 	return 0;
 }
 
@@ -108,17 +112,50 @@ LUA_METHOD(Database, exec) {
 }
 
 //-------------------------------------[ Database.query() ]
-static int row_iterator(lua_State *L) {	
-	return push_row(L, (Database*)lua_touserdata(L, lua_upvalueindex(1)), (sqlite3_stmt*)lua_touserdata(L, lua_upvalueindex(2)), lua_tointeger(L, lua_upvalueindex(3)));
+
+/* __gc for the stmt wrapper userdata: always finalizes the statement */
+static int stmt_gc(lua_State *L) {
+	sqlite3_stmt **pp = (sqlite3_stmt **)lua_touserdata(L, 1);
+	if (*pp) {
+		sqlite3_finalize(*pp);
+		*pp = NULL;
+	}
+	return 0;
+}
+
+/* Push a full userdata wrapping stmt with a __gc that calls sqlite3_finalize.
+   This ensures the statement is finalized when the iterator closure is GC'd,
+   even if the for-loop was exited early with break. */
+static sqlite3_stmt **push_stmt_udata(lua_State *L, sqlite3_stmt *stmt) {
+	sqlite3_stmt **pp = (sqlite3_stmt **)lua_newuserdata(L, sizeof(sqlite3_stmt *));
+	*pp = stmt;
+	if (luaL_newmetatable(L, "sqlite3_stmt")) {
+		lua_pushcfunction(L, stmt_gc);
+		lua_setfield(L, -2, "__gc");
+	}
+	lua_setmetatable(L, -2);
+	return pp;
+}
+
+static int row_iterator(lua_State *L) {
+	Database      *db    = (Database *)lua_touserdata(L, lua_upvalueindex(1));
+	sqlite3_stmt **pp    = (sqlite3_stmt **)lua_touserdata(L, lua_upvalueindex(2));
+	int            count = (int)lua_tointeger(L, lua_upvalueindex(3));
+	if (!*pp) return 0;
+	int result = push_row(L, db, *pp, count);
+	if (!result) {
+		sqlite3_finalize(*pp);
+		*pp = NULL;
+	}
+	return result;
 }
 
 LUA_METHOD(Database, query) {
 	Database *db = lua_self(L, 1, Database);
 	sqlite3_stmt *stmt = run_query(L, db);
-	int idx = 0;
-	
+
 	lua_pushlightuserdata(L, db);
-	lua_pushlightuserdata(L, stmt);
+	push_stmt_udata(L, stmt);				/* upvalue 2: GC-managed stmt wrapper */
 	lua_pushinteger(L, sqlite3_column_count(stmt));
 	lua_pushcclosure(L, row_iterator, 3);
 	return 1;
@@ -143,11 +180,15 @@ END
 
 LUA_METHOD(Database, __gc) {
 	Database *db = lua_self(L, 1, Database);
-	if (db->database)
+	if (db->database) {
+		sqlite3_stmt *stmt = NULL;
+		while ((stmt = sqlite3_next_stmt(db->database, NULL)) != NULL)
+			sqlite3_finalize(stmt);
 		sqlite3_close(db->database);
+	}
 	free(db->fname);
-    free(db);
-    return 0;
+	free(db);
+	return 0;
 }
 
 OBJECT_METAFIELDS(Database)
