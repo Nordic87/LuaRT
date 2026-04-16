@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Entry.c | LuaRT Entry and Edit object implementation
@@ -8,7 +8,7 @@
 
 
 #include <luart.h>
-#include <Widget.h>
+#include "Widget.h"
 #include "ui.h"
 #include <File.h>
 
@@ -46,7 +46,7 @@ BOOL LoadFont(LPCWSTR file, LPLOGFONTW lf) {
 }
 
 LUA_METHOD(Edit, append) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	wchar_t *chars = lua_towstring(L, 2);
 	SendMessage(w->handle, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
  	SendMessageW(w->handle,EM_REPLACESEL,(WPARAM) FALSE,(LPARAM) chars);	
@@ -57,17 +57,17 @@ LUA_METHOD(Edit, append) {
 }
 
 LUA_METHOD(Entry, redo) {
-	SendMessage(lua_self(L, 1, Widget)->handle, EM_REDO, 0, 0);
+	SendMessage(lua_selfwidget(L, 1)->handle, EM_REDO, 0, 0);
 	return 0;
 }
 
 LUA_METHOD(Entry, undo) {
-	SendMessage(lua_self(L, 1, Widget)->handle, EM_UNDO, 0, 0);
+	SendMessage(lua_selfwidget(L, 1)->handle, EM_UNDO, 0, 0);
 	return 0;
 }
 
 LUA_METHOD(Entry, paste) {
-	Widget *w= lua_self(L, 1, Widget);
+	Widget *w= lua_selfwidget(L, 1);
 	if (w->wtype == UIEntry)
 		SendMessage(w->handle, WM_PASTE, 0, 0);
 	else
@@ -76,7 +76,7 @@ LUA_METHOD(Entry, paste) {
 }
 
 LUA_METHOD(Entry, cut) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	if (w->wtype == UIEntry)
 		SendMessage(w->handle,EM_SETSEL,0,-1);
 	SendMessage(w->handle, WM_CUT, 0, 0);
@@ -84,7 +84,7 @@ LUA_METHOD(Entry, cut) {
 }
 
 LUA_METHOD(Entry, copy) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	if (w->wtype == UIEntry)
 		SendMessage(w->handle,EM_SETSEL,0,-1);
 	SendMessage(w->handle, WM_COPY, 0, 0);
@@ -92,7 +92,7 @@ LUA_METHOD(Entry, copy) {
 }
 
 LUA_PROPERTY_SET(Edit, line) {
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 	LONG pos;
 	if  ( (pos = SendMessage(h, EM_LINEINDEX, luaL_checkinteger(L, 2)-1, 0)) > -1) {
 		CHARRANGE cr = {pos, pos};
@@ -104,7 +104,7 @@ LUA_PROPERTY_SET(Edit, line) {
 }
 
 LUA_PROPERTY_GET(Edit, mousepos) {
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 	POINT p;
 	lua_Integer pos = -1;
 	RECT r;
@@ -122,17 +122,17 @@ LUA_PROPERTY_GET(Edit, mousepos) {
 }
 
 LUA_PROPERTY_GET(Edit, line) {
-	lua_pushinteger(L, SendMessage(lua_self(L, 1, Widget)->handle, EM_LINEFROMCHAR, -1, 0)+1);
+	lua_pushinteger(L, SendMessage(lua_selfwidget(L, 1)->handle, EM_LINEFROMCHAR, -1, 0)+1);
 	return 1;
 }
 
 LUA_PROPERTY_GET(Edit, wordwrap) {
-	lua_pushboolean(L, !lua_self(L, 1, Widget)->status);
+	lua_pushboolean(L, !lua_selfwidget(L, 1)->status);
 	return 1;
 }
 
 LUA_PROPERTY_SET(Edit, wordwrap) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	w->status = (HANDLE)(UINT_PTR)(lua_toboolean(L, 2) ? 0 : 1);
 	SendMessage(w->handle, EM_SETTARGETDEVICE, 0, (LPARAM)w->status);
 	return 0;
@@ -197,7 +197,7 @@ static Encoding detectBOM(FILE *f) {
 }
 
 static int do_file_operation(lua_State *L, const wchar_t *mode) {
-	HANDLE handle = lua_self(L, 1, Widget)->handle;
+	HANDLE handle = lua_selfwidget(L, 1)->handle;
 	BOOL result = FALSE;
 	FILE *f;
   	EDITSTREAM es = { 0 };
@@ -224,7 +224,7 @@ static int do_file_operation(lua_State *L, const wchar_t *mode) {
 
 static int edit_search(lua_State *L, LONG flags) {
 	FINDTEXTEXW ft = {0};
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 
 	if (lua_toboolean(L, 3))
 		flags |= FR_WHOLEWORD;
@@ -269,7 +269,7 @@ LUA_METHOD(Edit, saveto)
 }
 
 LUA_PROPERTY_GET(Edit, rtf) {
-	lua_pushboolean(L, SendMessage(lua_self(L, 1, Widget)->handle, EM_GETTEXTMODE, 0, 0) & TM_RICHTEXT);
+	lua_pushboolean(L, SendMessage(lua_selfwidget(L, 1)->handle, EM_GETTEXTMODE, 0, 0) & TM_RICHTEXT);
 	return 1;
 }
  
@@ -279,7 +279,7 @@ LUA_PROPERTY_GET(Edit, text);
 
 LUA_PROPERTY_SET(Edit, rtf) {
 	BOOL tortf = lua_toboolean(L, 2);
-	HWND h = lua_self(L, 1, Widget)->handle;	
+	HWND h = lua_selfwidget(L, 1)->handle;	
 	lua_pushcfunction(L, tortf ? Edit_setrichtext : Edit_settext);
 	lua_pushvalue(L, 1);
 	lua_pushcfunction(L, Edit_gettext);
@@ -292,7 +292,7 @@ LUA_PROPERTY_SET(Edit, rtf) {
 }
 
 LUA_PROPERTY_GET(Edit, column) {
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 	DWORD dwStart = 0, dwEnd = 0;
 	SendMessageW(h, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
     lua_pushinteger(L, 1+dwStart - SendMessageW(h, EM_LINEINDEX, SendMessage(h, EM_LINEFROMCHAR, dwStart, 0), 0));
@@ -300,7 +300,7 @@ LUA_PROPERTY_GET(Edit, column) {
 }
 
 LUA_PROPERTY_SET(Edit, column) {
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 	DWORD dwStart, dwEnd;
 	dwStart = SendMessageW(h, EM_LINEINDEX, SendMessage(h, EM_LINEFROMCHAR, -1, 0), 0) + luaL_checkinteger(L, 2)-1;
 	dwEnd = dwStart;
@@ -414,7 +414,7 @@ LUA_PROPERTY_GET(Edit, lines) {
 }
 
 LUA_PROPERTY_GET(Edit, caret) {
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 	CHARRANGE cr = {0};
 	SendMessageW(h, EM_EXGETSEL, (WPARAM)0, (LPARAM)&cr);
 	lua_pushinteger(L, cr.cpMax+1);
@@ -422,7 +422,7 @@ LUA_PROPERTY_GET(Edit, caret) {
 }
 
 LUA_PROPERTY_SET(Edit, caret) {
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 	CHARRANGE cr = {0};
 	cr.cpMin = luaL_checknumber(L, 2)-1;
 	cr.cpMax = cr.cpMin;
@@ -431,55 +431,60 @@ LUA_PROPERTY_SET(Edit, caret) {
 }
 
 LUA_PROPERTY_SET(Entry, textlimit) {
-	SendMessage(lua_self(L, 1, Widget)->handle, EM_SETLIMITTEXT, (WPARAM)luaL_checkinteger(L, 2), 0);
+	SendMessage(lua_selfwidget(L, 1)->handle, EM_SETLIMITTEXT, (WPARAM)luaL_checkinteger(L, 2), 0);
 	return 0;
 }
 
 LUA_PROPERTY_GET(Entry, textlimit) {
-	lua_pushinteger(L, SendMessage(lua_self(L, 1, Widget)->handle, EM_GETLIMITTEXT, 0, 0));
+	lua_pushinteger(L, SendMessage(lua_selfwidget(L, 1)->handle, EM_GETLIMITTEXT, 0, 0));
 	return 1;
 }
 
+LUA_PROPERTY_SET(Edit, textlimit) {
+	SendMessage(lua_selfwidget(L, 1)->handle, EM_EXLIMITTEXT, (WPARAM)luaL_checkinteger(L, 2), 0);
+	return 0;
+}
+
 LUA_PROPERTY_GET(Entry, modified) {
-	lua_pushboolean(L, SendMessage(lua_self(L, 1, Widget)->handle, EM_GETMODIFY, 0, 0));
+	lua_pushboolean(L, SendMessage(lua_selfwidget(L, 1)->handle, EM_GETMODIFY, 0, 0));
 	return 1;
 }
 
 LUA_PROPERTY_SET(Entry, modified) {
 	luaL_checktype(L, 2, LUA_TBOOLEAN);
-	SendMessage(lua_self(L, 1, Widget)->handle, EM_SETMODIFY, (WPARAM)lua_tointeger(L, 2), 0);
+	SendMessage(lua_selfwidget(L, 1)->handle, EM_SETMODIFY, (WPARAM)lua_tointeger(L, 2), 0);
 	return 0;
 }
 
 LUA_PROPERTY_GET(Entry, canredo) {
-	lua_pushboolean(L, SendMessage(lua_self(L, 1, Widget)->handle, EM_CANREDO, 0, 0));
+	lua_pushboolean(L, SendMessage(lua_selfwidget(L, 1)->handle, EM_CANREDO, 0, 0));
 	return 1;
 }
 
 LUA_PROPERTY_GET(Entry, canundo) {
-	lua_pushboolean(L, SendMessage(lua_self(L, 1, Widget)->handle, EM_CANUNDO, 0, 0));
+	lua_pushboolean(L, SendMessage(lua_selfwidget(L, 1)->handle, EM_CANUNDO, 0, 0));
 	return 1;
 }
 
 LUA_PROPERTY_GET(Entry, masked) {
-	lua_pushboolean(L, SendMessage(lua_self(L, 1, Widget)->handle, EM_GETPASSWORDCHAR , 0, 0));
+	lua_pushboolean(L, SendMessage(lua_selfwidget(L, 1)->handle, EM_GETPASSWORDCHAR , 0, 0));
 	return 1;
 }
 
 LUA_PROPERTY_SET(Entry, masked) {
-	HANDLE hwnd = lua_self(L, 1, Widget)->handle;
+	HANDLE hwnd = lua_selfwidget(L, 1)->handle;
 	SendMessageW(hwnd, EM_SETPASSWORDCHAR , lua_toboolean(L, 2) ? L'*' : 0, 0);
 	InvalidateRect(hwnd, NULL, 0);
 	return 0;
 }
 
 LUA_PROPERTY_GET(Edit, readonly) {
-	lua_pushboolean(L, (UINT_PTR)lua_self(L, 1, Widget)->status);
+	lua_pushboolean(L, (UINT_PTR)lua_selfwidget(L, 1)->status);
 	return 1;
 }
 
 LUA_PROPERTY_SET(Edit, readonly) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	
 	if ((w->cursor = lua_toboolean(L, 2)))
 		w->hcursor = LoadCursor(NULL, IDC_ARROW);
@@ -495,12 +500,12 @@ lua_Integer get_length(HWND h, DWORD flags) {
 }
 
 LUA_PROPERTY_GET(Edit, textlength) {
-	lua_pushinteger(L, get_length(lua_self(L, 1, Widget)->handle, GTL_NUMCHARS | GTL_USECRLF)-1);
+	lua_pushinteger(L, get_length(lua_selfwidget(L, 1)->handle, GTL_NUMCHARS | GTL_USECRLF)-1);
 	return 1;
 }
 
 LUA_PROPERTY_SET(Edit, text) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	int len;
 	SETTEXTEX st;
 	wchar_t *text = lua_tolwstring(L, 2, &len);
@@ -514,7 +519,7 @@ LUA_PROPERTY_SET(Edit, text) {
 }
 
 LUA_PROPERTY_GET(Edit, text) {
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 	GETTEXTEX gt;
 	wchar_t *buff;
 	size_t len = get_length(h, GTL_NUMBYTES | GTL_USECRLF);
@@ -529,7 +534,7 @@ LUA_PROPERTY_GET(Edit, text) {
 }
 
 LUA_PROPERTY_SET(Edit, richtext) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	EDITSTREAM es = { 0 };
 	streaminfo si = { 0 };
 	WPARAM type;
@@ -548,7 +553,7 @@ LUA_PROPERTY_SET(Edit, richtext) {
 	return 0;
 }
 LUA_PROPERTY_GET(Edit, richtext) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	EDITSTREAM es = { 0 };
 	streaminfo si = { 0 };
 	WPARAM type;
@@ -623,11 +628,11 @@ static int get_fontsize(lua_State *L, Widget *w, int scf) {
 }
 
 LUA_PROPERTY_GET(Edit, font) {
-	return get_font(L, lua_self(L, 1, Widget), SCF_ALL);
+	return get_font(L, lua_selfwidget(L, 1), SCF_ALL);
 }
 
 LUA_PROPERTY_SET(Edit, font) {
-	return set_font(L, lua_self(L, 1, Widget), SCF_ALL);
+	return set_font(L, lua_selfwidget(L, 1), SCF_ALL);
 }
 
 LUA_PROPERTY_GET(Selection, font) {
@@ -639,11 +644,11 @@ LUA_PROPERTY_SET(Selection, font) {
 }
 
 LUA_PROPERTY_GET(Edit, fontsize) {
-	return get_fontsize(L, lua_self(L, 1, Widget), SCF_ALL);
+	return get_fontsize(L, lua_selfwidget(L, 1), SCF_ALL);
 }
 
 LUA_PROPERTY_SET(Edit, fontsize) {
-	return set_fontsize(L, lua_self(L, 1, Widget), SCF_ALL);
+	return set_fontsize(L, lua_selfwidget(L, 1), SCF_ALL);
 }
 
 LUA_PROPERTY_GET(Selection, fontsize) {
@@ -690,13 +695,13 @@ LUA_PROPERTY_SET(Selection, fontstyle) {
 
 LUA_PROPERTY_GET(Edit, fontstyle) {
 	LOGFONTW lf = {0};
-	get_fontstyle(L, lua_self(L, 1, Widget), &lf, SCF_ALL);
+	get_fontstyle(L, lua_selfwidget(L, 1), &lf, SCF_ALL);
 	fontstyle_createtable(L, &lf);
 	return 1;
 }
 
 LUA_PROPERTY_SET(Edit, fontstyle) {
-	return set_fontstyle(L, lua_self(L, 1, Widget), SCF_ALL);
+	return set_fontstyle(L, lua_selfwidget(L, 1), SCF_ALL);
 }
 
 LUA_PROPERTY_GET(Selection, from) {
@@ -763,12 +768,12 @@ static int set_color(lua_State *L, Widget *w, int scf, BOOL isbg) {
 }
 
 LUA_PROPERTY_GET(Edit, border) {
-  	lua_pushboolean(L, GetWindowLongPtr(lua_self(L, 1, Widget)->handle, GWL_EXSTYLE) & WS_EX_STATICEDGE);
+  	lua_pushboolean(L, GetWindowLongPtr(lua_selfwidget(L, 1)->handle, GWL_EXSTYLE) & WS_EX_STATICEDGE);
 	return 1;
 }
 
 LUA_PROPERTY_SET(Edit, border) {
-	HWND h = lua_self(L, 1, Widget)->handle;
+	HWND h = lua_selfwidget(L, 1)->handle;
 	DWORD style =  GetWindowLongPtr(h, GWL_EXSTYLE);
 	SetWindowLongPtr(h, GWL_EXSTYLE, lua_toboolean(L, 2) ? style | WS_EX_STATICEDGE : style & ~WS_EX_STATICEDGE);
 	RedrawWindow(h, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_ERASENOW | RDW_ERASE);
@@ -777,19 +782,19 @@ LUA_PROPERTY_SET(Edit, border) {
 }
 
 LUA_PROPERTY_GET(Edit, fgcolor) {
-	return get_color(L, lua_self(L, 1, Widget), SCF_DEFAULT, FALSE);
+	return get_color(L, lua_selfwidget(L, 1), SCF_DEFAULT, FALSE);
 }
 
 LUA_PROPERTY_SET(Edit, fgcolor) {
-	return set_color(L, lua_self(L, 1, Widget), SCF_DEFAULT, FALSE);
+	return set_color(L, lua_selfwidget(L, 1), SCF_DEFAULT, FALSE);
 }
 
 LUA_PROPERTY_SET(Edit, bgcolor) {
-	return set_color(L, lua_self(L, 1, Widget), SCF_DEFAULT, TRUE);
+	return set_color(L, lua_selfwidget(L, 1), SCF_DEFAULT, TRUE);
 }
 
 LUA_PROPERTY_GET(Edit, bgcolor) {
-	return get_color(L, lua_self(L, 1, Widget), SCF_DEFAULT, TRUE);
+	return get_color(L, lua_selfwidget(L, 1), SCF_DEFAULT, TRUE);
 }
 
 LUA_PROPERTY_GET(Selection, color) {
@@ -1022,6 +1027,9 @@ luaL_Reg Edit_methods[] = {
 	{"get_canundo",		Entry_getcanundo},
 	{"get_canredo",		Entry_getcanredo},
 	{"get_mousepos",	Edit_getmousepos},
+	{"get_textlength",	Edit_gettextlength},
+	{"set_textlimit",	Edit_settextlimit},
+	{"get_textlimit",	Entry_gettextlimit},
 	{NULL, NULL}
 };
 
