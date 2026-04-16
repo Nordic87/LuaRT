@@ -1,5 +1,10 @@
 # LuaRT Studio Changelog
 
+## LuaRT Studio v2.2.0 (Apr 2026)
+- New: Run and debug Lua 5.5 scripts with LuaRT Studio (`global` keyword not supported)
+- New: LuaRT Studio editor supports new LuaRT extension syntax
+- Updated: LuaRT Studio is now using the LuaRT 2.2.0 toolchain
+
 ## LuaRT Studio v1.9.0 (Jan 27 2025)
 - Updated: LuaRT Studio is now using the LuaRT 1.9.0 toolchain
 - Fixed: Task function can now be debugged (Fixes #237)

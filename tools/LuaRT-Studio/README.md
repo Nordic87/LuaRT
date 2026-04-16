@@ -2,7 +2,7 @@
 
 [![Title][title]](https://studio.luart.org/)
 
-[![Lua VM 5.4.5](https://badgen.net/badge/Lua%20VM/5.4.7/yellow)](https://www.lua.org/)
+[![Lua VM 5.5](https://badgen.net/badge/Lua%20VM/5.5/yellow)](https://www.lua.org/)
 ![Windows](https://badgen.net/badge/Windows/Vista%20and%20later/blue?icon=windows)
 [![LuaRT Studio license](https://badgen.net/badge/License/MIT/green)](#license)
 [![Twitter Follow](https://img.shields.io/twitter/follow/__LuaRT__?style=social)](https://www.twitter.com/__LuaRT__)
@@ -21,9 +21,9 @@
 
 ## Features
 
-LuaRT Studio is a Windows IDE to develop Lua desktop or console applications, based on the LuaRT interpreter. LuaRT Studio can also be used to develop standard Lua applications based on latest Lua 5.4.7 VM.
+LuaRT Studio is a Windows IDE to develop Lua desktop or console applications, based on the LuaRT interpreter. LuaRT Studio can also be used to develop standard Lua applications based on latest Lua 5.5 VM.
 
-* Small and portable Lua 5.4.7 IDE for Windows for x86 and x64
+* Small and portable Lua 5.5 IDE for Windows for x86 and x64
 * Based on ZeroBrane Studio, from Paul Kulchenko 
 * Bundled with a specific LuaRT interpreter, compatible with standard Lua
 * Automatic switch between Lua console or desktop application based on file extension (.lua and .wlua respectively)
@@ -38,7 +38,7 @@ LuaRT Studio is a Windows IDE to develop Lua desktop or console applications, ba
 * LuaSocket updated to 3.0-rc1
 * Updated mobdebug to support LuaRT objects and Tasks
 * New project option to Show/Hide console window.
-* Local Lua 5.4.7 console 
+* Local Lua 5.5 console 
 
 ## Installation
 
