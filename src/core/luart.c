@@ -243,7 +243,7 @@ int main() {
 
 	if (argc == 1 && !is_embeded) {
 help:
-		puts(LUA_VERSION " " LUA_ARCH " - Windows programming framework for Lua.\nCopyright (c) 2065, Samir Tine.\nusage:\tluart.exe [options] [script] [args]\n\n\t-e stat\t\tExecutes the given Lua statement\n\t-l name\t\tRequire library 'name'\n\t-v\t\tShow version information\n\tscript\t\tRun a Lua script file\n\targs\t\tArguments for Lua interpreter");
+		puts(LUA_VERSION " " LUA_ARCH " - Windows programming framework for Lua.\nCopyright (c) 2026, Samir Tine.\nusage:\tluart.exe [options] [script] [args]\n\n\t-e stat\t\tExecutes the given Lua statement\n\t-l name\t\tRequire library 'name'\n\t-v\t\tShow version information\n\tscript\t\tRun a Lua script file\n\targs\t\tArguments for Lua interpreter");
 	} else {
 		// 1. Identify script index
 		if (is_embeded) {
