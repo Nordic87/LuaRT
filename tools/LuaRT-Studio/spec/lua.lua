@@ -7,7 +7,7 @@ local decindent = {
   ['else'] = true, ['elseif'] = true, ['until'] = true, ['end'] = true}
 local incindent = {
   ['else'] = true, ['elseif'] = true, ['for'] = true, ['do'] = true,
-  ['if'] = true, ['repeat'] = true, ['while'] = true}
+  ['if'] = true, ['repeat'] = true, ['while'] = true, ['try'] = true, ['catch'] = true}
 local function isfndef(str)
   local l
   local s,e,cap,par = string.find(str, "function%s+" .. funcdef .. "(%(.-%))")
@@ -252,7 +252,7 @@ return {
 
   keywords = {
     -- keywords
-    [[and break do else elseif end for function goto if in local not or repeat return then until while]],
+    [[and break do else elseif end for function goto if in local not or repeat return then until while await async import class try catch]],
 
     -- constants/variables
     [[_G _VERSION _ARCH _ENV false console.stderr io.stderr console.stdin io.stdin console.stdout io.stdout nil math.huge math.pi self true package.cpath package.path]],

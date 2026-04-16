@@ -307,26 +307,26 @@ end
 local function packResults(status, ...) return status, {...} end
 
 local ffi = require "ffi"
-local lua54 = require 'state'
-local L = lua54.luaL_newstate();
-lua54.luaL_openlibs(L)
+local lua55 = require 'state'
+local L = lua55.luaL_newstate();
+lua55.lua_openmodules(L)
 
 local function lua_pop(n)
-  lua54.lua_settop(L, -n-1)
+  lua55.lua_settop(L, -n-1)
 end
 
 local function lua_getstring(idx)
   local idx = idx or -1
 	local len = ffi.abi("64bit") and ffi.new("uint64_t[1]", 0) or ffi.new("unsigned int[1]", 0)
-	local str = ffi.string(lua54.lua_tolstring(L, idx, len), len[0])
+	local str = ffi.string(lua55.lua_tolstring(L, idx, len), len[0])
   if idx == -1 then
     lua_pop(1)
   end
 	return str
 end
 
-lua54.lua_pushcclosure(L, function (l)
-  local n = tonumber(lua54.lua_gettop(L));
+lua55.lua_pushcclosure(L, function (l)
+  local n = tonumber(lua55.lua_gettop(L));
   local result = ""
   for i = 1, n do
     result = result.."\t"..lua_getstring(i)
@@ -334,19 +334,19 @@ lua54.lua_pushcclosure(L, function (l)
   shellPrint(OUTPUT_MARKER, result, true)
   return 0
 end, 0)
-lua54.lua_setglobal(L, "print")
+lua55.lua_setglobal(L, "print")
 
 local function loadchunk(str) 
-	if lua54.luaL_loadstring(L, str) ~= lua54.LUA_OK then
+	if lua55.luaL_loadstring(L, str) ~= lua55.LUA_OK then
 		return nil, lua_getstring()
 	end
-	lua54.lua_setglobal(L, "callfunc")
+	lua55.lua_setglobal(L, "callfunc")
 	return true
 end
 
 local function lua_dostring(str)
-	if lua54.luaL_loadstring(L, str) == lua54.LUA_OK then
-    return lua54.lua_pcallk(L, 0, 1, 0, 0, nil) == 0
+	if lua55.luaL_loadstring(L, str) == lua55.LUA_OK then
+    return lua55.lua_pcallk(L, 0, 1, 0, 0, nil) == 0
   end
   return false
 end
@@ -535,7 +535,7 @@ function ShellExecuteCode(code, ismacro)
 end
 
 local function displayShellIntro()
-  DisplayShellMsg(TR("Welcome to the interactive Lua 5.4.7 "..console.getvalue("_ARCH").." interpreter").."\n"
+  DisplayShellMsg(TR("Welcome to the interactive Lua 5.5.0 "..console.getvalue("_ARCH").." interpreter").."\n"
     ..TR("Use 'help' to display the local console help.").."\n")
   DisplayShellPrompt('')
 end
@@ -738,8 +738,8 @@ function console:Reset()
 end
 
 function console:Shutdown()
-  if lua54 ~= nil then
-    lua54.lua_close(L)
+  if lua55 ~= nil then
+    lua55.lua_close(L)
     L = nil    
   end
 end

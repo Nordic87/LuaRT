@@ -44,7 +44,7 @@ local function displayAbout(event)
 	  <tr>
 		<td>
 		<b>LuaRT Studio %s (%s)</b><br>
-		<b>Copyright &copy; 2025 Samir Tine</b><br>
+		<b>Copyright &copy; 2026 Samir Tine</b><br>
 		Licensed under the MIT License.
 		</td>
 	  </tr>
