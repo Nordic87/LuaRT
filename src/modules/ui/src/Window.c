@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025.
+ | Luart.org, Copyright (c) Tine Samir 2026.
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Window.c | LuaRT Window object implementation
@@ -9,9 +9,9 @@
 #define LUA_LIB
 
 #include <luart.h>
-#include <Widget.h>
+#include "Widget.h"
 #include "ui.h"
-#include <Window.h>
+#include "Window.h"
 #include <windowsx.h>
 #include <dwmapi.h>
 #include "DarkMode.h"
@@ -423,14 +423,14 @@ LUA_CONSTRUCTOR(Window) {
 	w->handle = CreateWindowExW(uiLayout | WS_EX_LAYERED | WS_EX_COMPOSITED | WS_EX_CONTROLPARENT, L"Window", title, style_values[style] | DS_CONTROL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, r.right, r.bottom, wp ?  wp->handle : NULL, NULL, hInstance, NULL);
 	switch(style) {
 		case 3: 	{
-						DWM_WINDOW_CORNER_PREFERENCE d = DWMWCP_ROUND;
+			DWM_WINDOW_CORNER_PREFERENCE d = DWMWCP_ROUND;
 						COLORREF c = DWMWA_COLOR_NONE;
 						DwmSetWindowAttribute(w->handle, DWMWA_WINDOW_CORNER_PREFERENCE, &d, sizeof(DWM_WINDOW_CORNER_PREFERENCE));
 						DwmSetWindowAttribute(w->handle, DWMWA_BORDER_COLOR, &c, sizeof(DWMWA_BORDER_COLOR));
 					} 
 					w->style = WS_OVERLAPPEDWINDOW; break;
-		case 0:		w->style = WS_CAPTION | WS_THICKFRAME; break;
-		case 4:		
+					case 0:		w->style = WS_CAPTION | WS_THICKFRAME; break;
+					case 4:		
 		case 1:		SetWindowLong(w->handle, GWL_STYLE, GetWindowLongPtr(w->handle, GWL_STYLE) & ~WS_MAXIMIZEBOX); 
 		case 2:		
 		default:	w->style = WS_CAPTION;
@@ -465,28 +465,28 @@ LUA_CONSTRUCTOR(Window) {
 }
 
 LUA_METHOD(Window, maximize) {
-	ShowWindow(lua_self(L, 1, Widget)->handle, SW_MAXIMIZE);
+	ShowWindow(lua_selfwidget(L, 1)->handle, SW_MAXIMIZE);
 	return 0;
 }
 
 LUA_METHOD(Window, startmoving) {
 	ReleaseCapture();
-	SendMessage(lua_self(L, 1, Widget)->handle, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+	SendMessage(lua_selfwidget(L, 1)->handle, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
 	return 0;
 }
 
 LUA_METHOD(Window, minimize) {
-	ShowWindow(lua_self(L, 1, Widget)->handle, SW_MINIMIZE);
+	ShowWindow(lua_selfwidget(L, 1)->handle, SW_MINIMIZE);
 	return 0;
 }
 
 LUA_METHOD(Window, restore) {
-	ShowWindow(lua_self(L, 1, Widget)->handle, SW_RESTORE);
+	ShowWindow(lua_selfwidget(L, 1)->handle, SW_RESTORE);
 	return 0;
 }
 
 LUA_METHOD(Window, showmodal) {
-	HWND parent = lua_self(L, 1, Widget)->handle;
+	HWND parent = lua_selfwidget(L, 1)->handle;
 	Widget *child = lua_self(L, 2, Widget);
 	
 	child->tooltip = parent;
@@ -495,30 +495,45 @@ LUA_METHOD(Window, showmodal) {
 	return 0;
 }
 
+static int WinTaskContinue(lua_State* L, int status, lua_KContext ctx) {
+	return (ctx && IsWindowVisible(((Widget*)ctx)->handle)) ? lua_yieldk(L, 0, ctx, WinTaskContinue) : 0;
+}
+
+LUA_METHOD(Window, showasync) {
+	Widget *w = check_widget(L, 1, UIWindow);
+
+	w->ismain = TRUE;
+	Widget_show(L);
+	lua_pushtask(L, WinTaskContinue, w, NULL);
+	lua_pushvalue(L, -1);
+	lua_call(L, 0, 0);
+	return 1;
+}
+
 LUA_PROPERTY_GET(Window, monitor) {
-	EnumMonitor(MonitorFromWindow(lua_self(L, 1, Widget)->handle, MONITOR_DEFAULTTONEAREST), (HDC)TRUE, NULL, (LPARAM)L);
+	EnumMonitor(MonitorFromWindow(lua_selfwidget(L, 1)->handle, MONITOR_DEFAULTTONEAREST), (HDC)TRUE, NULL, (LPARAM)L);
 	return 1;
 }
 
 LUA_PROPERTY_GET(Window, fullscreen) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 
   	lua_pushboolean(L, !(GetWindowLongPtr(w->handle, GWL_STYLE) & w->style));
 	return 1;
 }
 
 LUA_PROPERTY_GET(Window, topmost) {
-  	lua_pushboolean(L, GetWindowLongPtr(lua_self(L, 1, Widget)->handle, GWL_EXSTYLE) & WS_EX_TOPMOST);
+  	lua_pushboolean(L, GetWindowLongPtr(lua_selfwidget(L, 1)->handle, GWL_EXSTYLE) & WS_EX_TOPMOST);
 	return 1;
 }
 
 LUA_PROPERTY_SET(Window, topmost) {
-	SetWindowPos(lua_self(L, 1, Widget)->handle, lua_toboolean(L, 2) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	SetWindowPos(lua_selfwidget(L, 1)->handle, lua_toboolean(L, 2) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	return 0;
 }
 
 LUA_PROPERTY_SET(Window, fullscreen) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	HWND h = w->handle;
 	DWORD dwStyle = GetWindowLongPtr(h, GWL_STYLE);
 	DWORD dwexStyle = GetWindowLongPtr(h, GWL_EXSTYLE);
@@ -578,7 +593,7 @@ static int notify(lua_State *L, Widget *w, DWORD action, UINT flags, void *tip, 
 }
 
 LUA_METHOD(Window, loadtrayicon) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	BOOL has_arg = lua_gettop(L) > 1;
 	
 	notify(L, w, has_arg ? (w->imglist ? NIM_MODIFY : NIM_ADD) : NIM_DELETE, NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP, has_arg ? widget_loadicon(L, TRUE): NULL, NULL, 0);
@@ -587,11 +602,11 @@ LUA_METHOD(Window, loadtrayicon) {
 }
 
 LUA_PROPERTY_SET(Window, traytooltip) {
-	return notify(L, lua_self(L, 1, Widget), NIM_MODIFY, NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP, lua_towstring(L, 2), NULL, 0);
+	return notify(L, lua_selfwidget(L, 1), NIM_MODIFY, NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP, lua_towstring(L, 2), NULL, 0);
 }
 
 LUA_METHOD(Window, notify) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	static const char *niiftypes[] = {"window", "none", "info", "warning", "error", NULL };
 	static const DWORD niifvalues[] = {NIIF_USER, NIIF_NONE, NIIF_INFO, NIIF_WARNING, NIIF_ERROR};
 	if (!w->imglist)
@@ -600,13 +615,13 @@ LUA_METHOD(Window, notify) {
 }
 
 LUA_PROPERTY_GET(Window, traytooltip) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	lua_pushwstring(L, w->item.listitem ? (wchar_t *)w->item.listitem : L"");
 	return 1;
 }
 
 LUA_METHOD(Window, status) {
-	Widget *win = lua_self(L, 1, Widget);
+	Widget *win = lua_selfwidget(L, 1);
 	int i, n = lua_gettop(L)-1;
 	HANDLE handle;
 	
@@ -652,7 +667,7 @@ LUA_METHOD(Window, status) {
 }
 
 LUA_PROPERTY_GET(Window, menu) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	
 	lua_pushnil(L);
 	if (w->menu)
@@ -661,12 +676,12 @@ LUA_PROPERTY_GET(Window, menu) {
 }
 
 LUA_PROPERTY_GET(Window, transparency) {
-	lua_pushinteger(L, lua_self(L, 1, Widget)->index+1);
+	lua_pushinteger(L, lua_selfwidget(L, 1)->index+1);
 	return 1;
 }
 
 LUA_PROPERTY_SET(Window, transparency) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 
 	w->index = luaL_checkinteger(L, 2)-1;
 	if (w->index > 0 && w->index < 255) {
@@ -678,7 +693,7 @@ LUA_PROPERTY_SET(Window, transparency) {
 
 LUA_METHOD(Window, popup) {
 	Widget *w = check_widget(L, 2, UIMenu);
-	HANDLE h = NULL, hwin = lua_self(L, 1, Widget)->handle;
+	HANDLE h = NULL, hwin = lua_selfwidget(L, 1)->handle;
 	POINT p;	
 	
 	if (w->parent) {
@@ -696,7 +711,7 @@ LUA_METHOD(Window, popup) {
 extern void init_menu(HMENU h);
 
 LUA_PROPERTY_SET(Window, menu) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	Widget *menu = lua_isnil(L,2) ? NULL : check_widget(L, 2, UIMenu);
 		
 	if (menu && (w->menu != menu->ref)) {
@@ -719,7 +734,7 @@ LUA_PROPERTY_SET(Window, menu) {
 }
 
 LUA_METHOD(Window, shortcut) {
-	Widget *parent = lua_self(L, 1, Widget);
+	Widget *parent = lua_selfwidget(L, 1);
 	ACCEL *accel_array;
 	ACCEL accel = {0};
 	int count = CopyAcceleratorTableW(parent->accel_table, NULL, 0);
@@ -751,7 +766,7 @@ LUA_METHOD(Window, shortcut) {
 
 //-------------------------------------[ Window.parent ]
 LUA_PROPERTY_GET(Window, parent) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 
 	if (w->wtype == UIWindow) {
 		Widget *wp;
@@ -778,7 +793,7 @@ static BOOL CALLBACK EnumChilds(HWND h, LPARAM lParam) {
 
 LUA_PROPERTY_GET(Window, childs) {
 	lua_createtable(L, 5, 0);
-	EnumChildWindows(lua_self(L, 1, Widget)->handle, EnumChilds, (LPARAM)L);
+	EnumChildWindows(lua_selfwidget(L, 1)->handle, EnumChilds, (LPARAM)L);
 	return 1;
 }
 
@@ -788,7 +803,7 @@ LUA_METHOD(Window, onClose) {
 }
 
 LUA_METHOD(Window, __gc) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	SendMessage(w->handle, WM_CLOSE, 0, 0);
 	DestroyWindow(w->status);
 	notify(L, w, NIM_DELETE, NIF_ICON, NULL, NULL, 0);
@@ -812,6 +827,7 @@ END
 OBJECT_MEMBERS(Window)
 	METHOD(Window, onClose)
 	METHOD(Window, showmodal)
+	METHOD(Window, showasync)
 	METHOD(Window, minimize)
 	METHOD(Window, maximize)
 	METHOD(Window, restore)
