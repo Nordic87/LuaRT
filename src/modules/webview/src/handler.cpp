@@ -1,6 +1,6 @@
 /*
  | Webview for LuaRT - HTML/JS/CSS render Widget
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE
  |-------------------------------------------------
  | handler.cpp | Webview2 c++ interface class wrapper
@@ -36,14 +36,20 @@ static char *wchar_toutf8(const wchar_t *str) {
 }
 
 WebviewHandler::~WebviewHandler() {
-	if (this->webview3)
-	this->webview3->Release();
+	ICoreWebView2Environment *env = nullptr;
+	this->controller->Release();
+
+	if (this->webview3) {
+		this->webview3->get_Environment(&env);
+		this->webview3->Release();
+	}
 	if (this->webview2) {
 		this->webview2->RemoveWebResourceRequestedFilter(L"*", COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
 		this->webview2->Release();
 	}
 	if (this->controller)
-    	this->controller->Release();
+	if (env)
+		env->Release();
 }
 
 WebviewHandler::WebviewHandler(HWND h, const char *URL, const char *args) {
@@ -120,8 +126,8 @@ WebviewHandler::WebviewHandler(HWND h, const char *URL, const char *args) {
 								if (SUCCEEDED(request->get_Uri(&wuri))) {
 									char *uri = wchar_toutf8(wuri);
 									char *entry = strstr(uri, "file:///") ? uri+8 : NULL;
-									if (this->archive) {
-										if (entry && zip_entry_open(this->archive, entry) == 0) {
+									if (entry && this->archive) {
+										if (zip_entry_open(this->archive, entry) == 0) {
 											void *buffer;
 											size_t buffsize;
 											IStream *stream;
@@ -142,7 +148,7 @@ WebviewHandler::WebviewHandler(HWND h, const char *URL, const char *args) {
 											stream->Release();
 											result = S_OK;
 											free(buffer);
-										}  		
+										}
 									} else {
 										if (entry && std::filesystem::exists(entry)) {
 											void *buffer;

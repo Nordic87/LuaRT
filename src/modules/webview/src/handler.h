@@ -1,6 +1,6 @@
 /*
  | Webview for LuaRT - HTML/JS/CSS render Widget
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE
  |--------------------------------------------------------
  | handler.h | Webview2 c++ interface class wrapper header
@@ -14,9 +14,9 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "../../ui/src/ui.h"
 
 extern UIInterface *ui;
-extern luart_type TWidget;
 
 extern UINT onReady, onMessage, onLoaded, onFullscreen;
 extern wchar_t *ErrorFromHR(HRESULT errorCode);
