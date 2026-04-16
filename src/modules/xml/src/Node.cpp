@@ -1,6 +1,6 @@
 /*
  | xml for LuaRT
- | Luart.org, Copyright (c) Tine Samir 2025.
+ | Luart.org, Copyright (c) Tine Samir 2026.
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Node.cpp | LuaRT XML Node Object
@@ -163,15 +163,14 @@ LUA_METHOD(attributes, newindex) {
 }
 
 LUA_PROPERTY_GET(Node, attributes) {
-	lua_createtable(L, 0, 2);
-  if (luaL_newmetatable(L, "xmlelement_mt")) {
-    lua_pushcfunction(L, attributes_index);
-    lua_setfield(L, -2, "__index");
-    lua_pushcfunction(L, attributes_newindex);
-    lua_setfield(L, -2, "__newindex");
-		lua_pushvalue(L, 1);
-		lua_setfield(L, -2, "node");
-  }
+  lua_createtable(L, 0, 0);
+  lua_createtable(L, 0, 3);
+  lua_pushcfunction(L, attributes_index);
+  lua_setfield(L, -2, "__index");
+  lua_pushcfunction(L, attributes_newindex);
+  lua_setfield(L, -2, "__newindex");
+  lua_pushvalue(L, 1);
+  lua_setfield(L, -2, "node");
   lua_setmetatable(L, -2);
 	return 1;
 }
