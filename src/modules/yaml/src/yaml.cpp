@@ -129,8 +129,6 @@ static void LuaToYaml(lua_State *L, YAML::Node &node, int index) {
                     lua_rawgeti(L, index, i);
                     YAML::Node child;
                     LuaToYaml(L, child, -1);
-                    if (child.Type() == YAML::NodeType::Map)
-                        child.SetStyle(YAML::EmitterStyle::Flow);
                     node.push_back(child);
                     lua_pop(L, 1);
                 }
@@ -143,8 +141,6 @@ static void LuaToYaml(lua_State *L, YAML::Node &node, int index) {
                     if (lua_type(L, -2) == LUA_TSTRING) {
                         YAML::Node child;
                         LuaToYaml(L, child, -1);
-                        if (child.Type() == YAML::NodeType::Map)
-                            child.SetStyle(YAML::EmitterStyle::Flow);
                         node[lua_tostring(L, -2)] = child;
                     }
                     lua_pop(L, 1);
