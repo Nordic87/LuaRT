@@ -20,10 +20,11 @@ Build standalone Windows executables from your Lua scripts.
 
 - Standalone tool : no Makefile, no C compiler needed
 - Compile from command line or using a GUI frontend
-- Build Windows native executable (.exe) from your Lua 5.4.7 scripts
+- Build Windows native executable (.exe) from your Lua 5.5.0 scripts
 - Windows desktop or console applications
-- Static executables (without `lua54.dll` dependency)
-- Dynamic executables (with `lua54.dll` dependency)
+- Uses latest Lua 5.5 VM
+- Static executables (without `lua55.dll` dependency)
+- Dynamic executables (with `lua55.dll` dependency)
 - Embed any files with your executable, even Lua binary modules with seamless loading using `require()`
 - Loads DLL dependencies in embedded files transparently
 - Access embedded files seamlessly from your Lua scripts using `sys.File()`
@@ -50,7 +51,7 @@ It should produce a "**rtc.exe**" and "**wrtc.exe**"executable.
   
 ```
 usage:	rtc.exe [-s][-c][-w][-i icon][-o output] [-lmodname] [directory] main.lua
-	-s		create static executable (without LUA54.DLL dependency)
+	-s		create static executable (without LUA55.DLL dependency)
 	-c		create executable for console (default)
 	-w		create executable for Windows desktop
 	-i icon		set executable icon (expects an .ico file)
@@ -65,7 +66,7 @@ The specified optional directory will then be embedded within the executable wit
 As an alternative, you can use **wrtc.exe**, the GUI frontend which is more usert friendly.
 
 > **Warning**
-> Compiled dynamic executable depends on the provided `lua54.dll` library. Do not use any other library or your application will throw an error or may crash.
+> Compiled dynamic executable depends on the provided `lua55.dll` library. Do not use any other library or your application will throw an error or may crash.
 
 #### Accessing embedded files from your LuaRT application
   
@@ -98,7 +99,7 @@ print(english.hello)
 
 ## License
   
-LuaRT and rtc are copyright (c) 2025 Samir Tine.
+LuaRT and rtc are copyright (c) 2026 Samir Tine.
 rtc is open source, released under the MIT License.
 See full copyright notice in the LICENSE file.
 

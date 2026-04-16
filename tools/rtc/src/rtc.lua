@@ -1,5 +1,5 @@
 -- | RTc - Lua script to executable compiler
--- | Luart.org, Copyright (c) Tine Samir 2025
+-- | Luart.org, Copyright (c) Tine Samir 2026
 -- | See Copyright Notice in LICENSE.TXT
 -- |---------------------------------------------------
 -- | RTc.lua | LuaRT executable compiler
@@ -17,7 +17,7 @@ static = false
 
 local libs = {}
 local files = {}
-local libpaths = { sys.File(arg[-1]).path.."..\\modules\\" }
+local libpaths = { sys.File(arg[-1]).directory.parent.fullpath.."/modules" }
 
 if (arg[-1]:find("wrtc") or arg[-1]:find("wluart")) == nil then
 	console = require "console"
@@ -25,11 +25,11 @@ if (arg[-1]:find("wrtc") or arg[-1]:find("wluart")) == nil then
 		console.writecolor("lightblue", "rt")
 		console.writecolor('yellow', "c ")
 		print(_VERSION:match(" (.*)$")..[[ - Lua script to executable compiler.
-Copyright (c) 2025, Samir Tine.
+Copyright (c) 2026, Samir Tine.
 	
 usage:	rtc.exe [-s][-c][-w][-i icon][-o output] [-lmodname] [directory] main.lua [file1.lua file2.lua...]
 	
-	-s		create static executable (without LUA54.DLL dependency)
+	-s		create static executable (without LUA55.DLL dependency)
 	-c		create executable for console (default)
 	-w		create executable for Windows desktop
 	-i icon		set executable icon (expects an .ico file)
@@ -41,14 +41,18 @@ usage:	rtc.exe [-s][-c][-w][-i icon][-o output] [-lmodname] [directory] main.lua
 		sys.exit()
 	end
 
+	local function normalize(path)
+		return path:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1"):gsub("\\", "/")
+	end
+
 	------------------------------------| Parse commande line
 	for i=1, #arg do
 		local option = arg[i]
 		if setoutput then
-			output = option
+			output = normalize(option)
 			setoutput = false
 		elseif set_icon then
-			icon = option
+			icon = normalize(option)
 			set_icon = false
 		elseif option == "-i" then
 			set_icon = true
@@ -64,17 +68,17 @@ usage:	rtc.exe [-s][-c][-w][-i icon][-o output] [-lmodname] [directory] main.lua
 		elseif option:find("-l") == 1 then
 			libs[#libs+1] = option:match("%-l(%w+)")
 		elseif option:find("-L") == 1 then
-			libpaths[#libpaths+1] = option:sub(3, -1)
+			libpaths[#libpaths+1] = normalize(option:sub(3, -1))
 		elseif option:usub(1,1) == "-" then 
 			print("invalid option "..option)
 			sys.exit(-1)
-		elseif directory == nil and not sys.File(option).exists then
-			directory = sys.Directory(option)
+		elseif directory == nil and #files > 0 and not sys.File(option).exists then
+			directory = sys.Directory(normalize(option))
 			if not directory.exists then
 				error("cannot find directory "..option)
 			end
 		else 
-			local f = sys.File(option)
+			local f = sys.File(normalize(option))
 			if not f.exists then
 				error("cannot find file "..option)
 			end
@@ -123,27 +127,32 @@ local z = zip.Zip(fs.fullpath, "write")
 local _error = error
 
 local function error(err)
-	_error(err:gsub('%[string "([%w%.]+)"%]', "%1"))
+	_error(err:gsub('%[rtc%.lua"([%w%.]+)"%]', "%1"))
+end
+
+local function link_file(f, path)
+	local path = path or ""
+	local content = f:open():read()
+	local result, err = load(content, f.name)
+	if result == nil then
+		error(err)
+	end
+	local fname = sys.tempfile("luartc_file_")
+	fname:open("write", "binary")
+	fname:write(string.dump(result, true))
+	fname:close()
+	z:write(fname, (path ~= "" and path.."/"..f.name or f.name))
+	fname:remove()
 end
 
 for f in each(files) do
 	if directory == nil or f.directory.fullpath:usearch(directory.fullpath) == nil then
-		local content = f:open():read()
-		local result, err = load(content, f.name)
-		if result == nil then
-			error(err)
-		end
-		local fname = sys.tempfile("luartc_file_")
-		fname:open("write", "binary")
-		fname:write(content)
-		fname:close()
-		z:write(fname, f.name)
-		fname:remove()
+		link_file(f)
 	end
 end
 
 local fname = sys.tempfile("luartc_file_"):open("write", "binary")
-fname:write("load(embed.File('"..files[1].name.."'):open():read(), '"..files[1].name.."')()")
+fname:write("load(tostring(embed.File('"..files[1].name.."'):open('read', 'binary'):read()), '"..files[1].name.."')()")
 fname:close()
 z:write(fname, "__mainLuaRTStartup__.lua")
 fname:remove()
@@ -157,21 +166,28 @@ for lib in each(libs) do
 	for path in each(libpaths) do
 		libpath = path.."/"..lib
 		if sys.Directory(libpath).exists then
+			goto done
+		end
+	end
+	for path in package.cpath:gmatch("[^;]+") do
+		libpath = path:gsub("%.", "%%."):gsub("%?", lib)
+		if sys.Directory(libpath).exists then
 			break
 		end
 	end
+::done::
 	local _moddir = sys.Directory(libpath or "")
 	if _moddir.exists then
+		print("Linking "..lib.." module")
 		for entry in each(_moddir) do
 			if type(entry) == "File" then
-				if entry.extension == ".dll" and entry.name:find("^"..lib)  then
+				if entry.extension == ".dll" and entry.name:find(lib)  then
 					if string.lower(entry.name) == lib..(static and ".dll" or "-static.dll") then
 						goto continue
 					end
-					print("Linking "..lib.." module")
 				end
-				z:write(entry.fullpath, "__modules/"..lib.."/"..entry.name)
 			end
+			z:write(entry.fullpath, "__modules/"..lib.."/"..entry.name)
 ::continue::			
 		end
 	else
@@ -185,9 +201,24 @@ for lib in each(libs) do
 	end
 end
 
-if directory ~= nil then
-	z:write(directory)
+local function link_dir(d, path)
+	local path = path or ""
+	for entry in each(d) do
+		if type(entry) == "File" and entry.extension:match("%a?lua") then
+			link_file(entry, path)
+		elseif type(entry) == "Directory" then
+			print("linking folder "..(path ~= "" and path.."/"..entry.name or entry.name))
+			link_dir(entry, path ~= "" and path.."/"..entry.name or entry.name)
+		else
+			z:write(entry, path ~= "" and path.."/"..entry.name or entry.name)
+		end
+	end
 end
+
+if directory ~= nil then
+	link_dir(directory)
+end
+
 z:close()
 
 output = sys.File(output or file.name:gusub("(%w+)$", "exe"))

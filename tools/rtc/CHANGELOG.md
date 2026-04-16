@@ -1,5 +1,13 @@
 # rtc Changelog
 
+## rtc v2.2 (Apr 2026)
+- New : rtc now uses Lua 5.5 VM
+- Updated: Faster loading time for compiled executables startup
+- Updated: embedded content is now obfuscated (simple encryption)
+- Fixed: Now Lua files included in the embedded content are *really* compiled to Lua bytecode
+- Fixed: multiple compiled executables instances can now execute at the same time
+- Fixed: multiple compiled executables with different LuaRT versions can now execute at the same time
+
 ## rtc v2.0 (May 10 2025)
 - New: `sys.File()` now uses embedded files first for compiled scripts.
 - Updated: static compiled executables can now embed and load Lua binary modules (linked with `lua54-static.lib` and suffixed by `-static.dll`)

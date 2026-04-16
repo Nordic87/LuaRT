@@ -109,7 +109,7 @@ end
 update_icon()
 win:center()
 
-ui.run(win):wait()
+win:showasync():wait()
 
 local directory = #embed.text > 0 and sys.Directory(embed.text) or nil
 
