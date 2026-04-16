@@ -2,7 +2,7 @@
 //	DATAOBJECT.CPP
 //
 //	Implementation of the IDataObject COM interface
-//	Modified by Samir Tine 2025
+//	Modified by Samir Tine 2026
 //	By J Brown 2004 
 //
 //	www.catch22.net
@@ -13,6 +13,8 @@
 #include <windows.h>
 #include <shlobj_core.h>
 #include <vector>
+#include <algorithm>
+#include <string>
 #include "ui.h"
 
 CLIPFORMAT CF_PREFERREDDROPEFFECT = static_cast<CLIPFORMAT>(RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT));
@@ -341,4 +343,158 @@ extern "C" {
 	HRESULT CreateDataObject(FORMATETC *fmtetc, STGMEDIUM *stgmeds, IDataObject **ppDataObject) {
 		return _CreateDataObject(fmtetc, stgmeds, ppDataObject);
 	}
+}
+
+//
+//---------------------------------------------- ListView DragDrop helper functions
+//
+
+#include "DragDrop.h"
+
+struct ListViewDragState {
+    BOOL isDragging = false;
+    HIMAGELIST hDragImage = nullptr;
+    POINT ptStart = {0, 0};
+    int selectedIndex = -1;
+    HWND sourceListView = nullptr;
+    int lastDropHighlight = -1;
+};
+
+static struct {
+    HWND source = nullptr;
+    int itemIndex = -1;
+    char text[256] = {};
+} g_dragTransfer;
+
+extern "C" {
+
+ListViewDragStateHandle ListView_CreateDragState(void) {
+    return new ListViewDragState();
+}
+
+void ListView_DestroyDragState(ListViewDragStateHandle handle) {
+    delete static_cast<ListViewDragState*>(handle);
+}
+
+HWND ListView_SourceDrag(void) {
+    return g_dragTransfer.source;
+}
+
+BOOL ListView_BeginDrag(HWND hListView, LPARAM lParam, ListViewDragStateHandle handle) {
+    auto* state = static_cast<ListViewDragState*>(handle);
+    POINT pt = { LOWORD(lParam), HIWORD(lParam) };
+
+    LVHITTESTINFO hit = { 0 };
+	hit.pt = pt;
+    if (ListView_HitTest(hListView, &hit) < 0)
+        return FALSE;
+
+    state->ptStart = pt;
+    state->selectedIndex = hit.iItem;
+    state->sourceListView = hListView;
+    state->lastDropHighlight = -1;
+
+    if (state->selectedIndex >= 0) {
+        ListView_GetItemText(hListView, state->selectedIndex, 0, g_dragTransfer.text, ARRAYSIZE(g_dragTransfer.text));
+        g_dragTransfer.source = hListView;
+        g_dragTransfer.itemIndex = state->selectedIndex;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+void ListView_UpdateDrag(HWND hListView, LPARAM lParam, ListViewDragStateHandle handle) {
+    auto* state = static_cast<ListViewDragState*>(handle);
+    POINT pt = { LOWORD(lParam), HIWORD(lParam) };
+    
+    if (!state->isDragging && (GetAsyncKeyState(VK_LBUTTON) & 0x8000)) {
+		int dx = abs(pt.x - state->ptStart.x);
+        int dy = abs(pt.y - state->ptStart.y);
+        if ((dx > 4 || dy > 4) && state->selectedIndex >= 0) {
+			state->hDragImage = ListView_CreateDragImage(hListView, state->selectedIndex, &state->ptStart);
+            ImageList_BeginDrag(state->hDragImage, 0, 0, 0);
+            ImageList_DragEnter(hListView, pt.x, pt.y);
+            SetCapture(hListView);
+            state->isDragging = true;
+        }
+    }
+
+    if (state->isDragging) {
+        ImageList_DragMove(LOWORD(lParam), HIWORD(lParam));
+
+        LVHITTESTINFO hit = { 0 };
+		hit.pt = pt;
+
+        int dropIndex = ListView_HitTest(hListView, &hit);
+
+        if (dropIndex != state->lastDropHighlight) {
+            if (state->lastDropHighlight >= 0) {
+                ListView_SetItemState(hListView, state->lastDropHighlight, 0, LVIS_DROPHILITED);
+            }
+            if (dropIndex >= 0) {
+                ListView_SetItemState(hListView, dropIndex, LVIS_DROPHILITED, LVIS_DROPHILITED);
+            }
+            state->lastDropHighlight = dropIndex;
+        }
+    }
+}
+
+BOOL ListView_EndDrag(HWND hListView, LPARAM lParam, ListViewDragStateHandle handle, WORD* sourceIndex, WORD* targetIndex) {
+    auto* state = static_cast<ListViewDragState*>(handle);
+    if (!state->isDragging)
+        return FALSE;
+
+    POINT pt = { LOWORD(lParam), HIWORD(lParam) };
+    ScreenToClient(hListView, &pt);
+
+    LVHITTESTINFO hit = { 0 };
+	hit.pt = pt;
+    int dropIndex = ListView_HitTest(hListView, &hit);
+    if (dropIndex < 0)
+        dropIndex = ListView_GetItemCount(hListView);
+
+    ImageList_EndDrag();
+    ImageList_Destroy(state->hDragImage);
+    ReleaseCapture();
+    state->isDragging = false;
+
+    if (state->lastDropHighlight >= 0) {
+        ListView_SetItemState(hListView, state->lastDropHighlight, 0, LVIS_DROPHILITED);
+        state->lastDropHighlight = -1;
+    }
+
+    if (sourceIndex)     *sourceIndex = g_dragTransfer.itemIndex;
+    if (targetIndex)     *targetIndex = dropIndex;
+
+    BOOL valid = (g_dragTransfer.itemIndex >= 0 && g_dragTransfer.text[0] != L'\0');
+    g_dragTransfer.source = nullptr;
+    g_dragTransfer.itemIndex = -1;
+    g_dragTransfer.text[0] = L'\0';
+    state->selectedIndex = -1;
+
+    return valid;
+}
+
+void ListView_CancelDrag(HWND hListView, ListViewDragStateHandle handle) {
+    auto* state = static_cast<ListViewDragState*>(handle);
+    if (!state->isDragging)
+        return;
+
+    ImageList_EndDrag();
+    ImageList_Destroy(state->hDragImage);
+    ReleaseCapture();
+    state->isDragging = false;
+
+    if (state->lastDropHighlight >= 0) {
+        ListView_SetItemState(hListView, state->lastDropHighlight, 0, LVIS_DROPHILITED);
+        state->lastDropHighlight = -1;
+    }
+
+    g_dragTransfer.source = nullptr;
+    g_dragTransfer.itemIndex = -1;
+    g_dragTransfer.text[0] = L'\0';
+    state->selectedIndex = -1;
+}
+
 }
