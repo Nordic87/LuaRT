@@ -14,7 +14,7 @@ lex:add_rule('whitespace', token(lexer.WHITESPACE, lexer.space^1))
 -- Keywords.
 lex:add_rule('keyword', token(lexer.KEYWORD, word_match[[
   and break do else elseif end false for function if in local nil not or repeat
-  return then true until while
+  return then true until while async await class import try catch
   -- Added in 5.2.
   goto
 ]]))

@@ -1,4 +1,4 @@
-  --lua.h lauxlib.h lualib.h from Lua 5.4.7 (defines made enums, macros removed)
+  --lua.h lauxlib.h lualib.h from Lua 5.4.7 updated for Lua 5.5.0 (defines made enums, macros removed)
   local ffi = require'ffi'
   
   local header = [[
@@ -195,7 +195,7 @@
 													const char *r);
   /* lualib.h -------------------------------------------------------- */
   /* open all previous libraries */
-  void (luaL_openlibs) (lua_State *L);
+  void (lua_openmodules) (lua_State *L);
   ]]
   
   if ffi.abi("64bit") then
@@ -204,5 +204,5 @@
   
   ffi.cdef(header)
   
-  return ffi.load("bin/lua54")
+  return ffi.load("bin/lua55")
   

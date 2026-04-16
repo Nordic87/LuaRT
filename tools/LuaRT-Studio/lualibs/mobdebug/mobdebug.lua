@@ -49,7 +49,7 @@ local gsub, sub, find = string.gsub, string.sub, string.find
 -- the debug loop as 'wx' can be loaded at any time during debugging.
 local genv = _G or _ENV
 local jit = rawget(genv, "jit")
-local LuaRT = rawget(genv, "sys") and true or false
+local LuaRT = debug.settaskhook and true or false
 local MOAICoroutine = rawget(genv, "MOAICoroutine")
 
 local corocreate = ngx and coroutine._create or coroutine.create

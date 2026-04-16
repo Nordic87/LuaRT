@@ -33,7 +33,7 @@ function core_utils.eval_const_node(node)
       end
 
       -- On Lua 5.3+ convert to float to get same results as on Lua 5.1 and 5.2.
-      if (_VERSION == "Lua 5.3" or _VERSION == "Lua 5.4") and not str:find("[%.eEpP]") then
+      if (_VERSION == "Lua 5.3" or _VERSION == "Lua 5.4" or _VERSION="Lua 5.5") and not str:find("[%.eEpP]") then
          str = str .. ".0"
       end
 

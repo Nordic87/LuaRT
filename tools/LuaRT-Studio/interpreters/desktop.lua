@@ -1,5 +1,5 @@
 
-local version = 5.4
+local version = 5.5
 
 local function exePath(self, version)
     local version = tostring(version or ""):gsub('%.','')

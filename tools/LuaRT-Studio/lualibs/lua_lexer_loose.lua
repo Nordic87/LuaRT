@@ -108,7 +108,7 @@ op['//'] = true
 local is_keyword = qws[[
   and break do else elseif end false for function if
   in local nil not or repeat return
-  then true until while goto]]
+  then true until while goto import async try await catch class]]
 
 function M.lex(code, f, pos)
   local pos = pos or 1
