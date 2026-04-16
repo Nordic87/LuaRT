@@ -1,15 +1,13 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025.
+ | Luart.org, Copyright (c) Tine Samir 2026.
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | ui.c | LuaRT ui module
 */
 
-
-
 #include <luart.h>
-#include <Widget.h>
+#include "Widget.h"
 #include <Task.h>
 #include "ui.h"
 #include <File.h>
@@ -28,10 +26,12 @@
 #include <wincodec.h>
 #include "..\..\core\resources\resource.h"
 #include "DarkMode.h"
+#include "DragDrop.h"
 
-__declspec(dllexport) luart_type TWidget = 0;
-__declspec(dllexport) UINT WM_LUAMAX = 0;
-static UIInterface ui_interface;
+luart_type TWidget=0;
+luart_type TWidgetItem;
+UINT WM_LUAMAX = WM_LUAMIN;
+UIInterface ui_interface;
 
 static Task *uitask;
 Widget *main = NULL;
@@ -61,17 +61,17 @@ DWORD uiLayout = 0;
 const char *themes[] = { "light", "dark" };
 HBRUSH DARK_BRUSH;
 HBRUSH CBDARK_BRUSH;
-UINT MAX_EVENTS = WM_USER + 1;
 
 lua_Integer lua_registerevent(lua_State *L, const char *methodname, lua_Event event) {
+	UINT id = WM_LUAMAX;
 	luaL_getsubtable(L, LUA_REGISTRYINDEX, "LuaRT Events");
-	WM_LUAMAX += luaL_len(L, -1)+1;
 	if (methodname)
 		lua_pushstring(L, methodname);
 	else lua_pushlightuserdata(L, event);
 	lua_rawseti(L, -2, WM_LUAMAX);
 	lua_pop(L, 1);
-	return WM_LUAMAX;
+	++WM_LUAMAX;
+	return id;
 }
 
 void *lua_getevent(lua_State *L, lua_Integer eventid, int *type) {
@@ -345,7 +345,7 @@ static int dialog(lua_State *L, BOOL save, DWORD flags) {
 	wchar_t szFile[MAX_PATH];
 	wchar_t *filter = NULL;
 	BOOL ismultiple = FALSE;
-	HWND current = GetFocus();
+	HWND current = GetForegroundWindow();
 	
 	SetForegroundWindow(current);
 	ofn.lStructSize = sizeof(ofn);
@@ -492,7 +492,7 @@ LUA_METHOD(ui, selectdir) {
 	    }
 	    lua_pushwstring(L, path);
 	    lua_pushinstance(L, Directory, 1);
-	} else luaL_pushfail(L);
+	} else lua_pushnil(L);
 	AllowDarkModeForApp(DarkMode);
 	FixDarkScrollBar(DarkMode);
 	free((void*)bi.lpszTitle);
@@ -504,7 +504,7 @@ LUA_METHOD(ui, selectdir) {
 LUA_METHOD(ui, remove) {
 	Widget *w;
 	if (lua_gettop(L) && (lua_type(L, 1) == LUA_TTABLE)) {
-		w = lua_self(L, 1, Widget);
+		w = lua_selfwidget(L, 1);
 		if (w->ref)
 			luaL_unref(L, LUA_REGISTRYINDEX, w->ref);
 		if (w->wtype == UIMenu)
@@ -594,8 +594,10 @@ int do_update(lua_State *L) {
 													}
 													else __push_item(L, w, 0, (HTREEITEM)msg.lParam);
 													lua_pushstring(L, msg.wParam ? "removed" : "edited");
-												} else if (w->wtype == UIEdit)
-													SendMessage(w->handle, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS);
+												} else if (w->wtype == UIEdit) {
+													DWORD oldMask = SendMessage(w->handle, EM_GETEVENTMASK, 0, 0);
+													SendMessage(w->handle, EM_SETEVENTMASK, 0, oldMask & ~ENM_CHANGE);
+												}
 												break;
 							case WM_LUASELECT:	if (w->wtype == UIEntry)
 													GetText(L, w->handle);
@@ -613,9 +615,24 @@ int do_update(lua_State *L) {
 							case WM_LUATHEMECHANGE:
 												lua_pushboolean(L, msg.wParam);
 												break;
+							case WM_LUADROPITEM: {
+													Widget *fromWidget = dragState.sourceWidget;
+													WORD to = HIWORD(msg.wParam);
+													WORD from = LOWORD(msg.wParam);
+
+													if (fromWidget->wtype == UIList) {
+														__push_item(L, fromWidget, from, NULL);
+														lua_pushinteger(L, to);
+													} else if (fromWidget->wtype == UITree) {
+														HTREEITEM hFrom = get_Treeitem_byindex(fromWidget->handle, NULL, 0, from);
+														__push_item(L, fromWidget, 0, hFrom);
+														lua_pushinteger(L, to);
+													}
+													break;
+												}
 							case WM_LUADROP:	{
 													char *data = (char *)msg.wParam;
-													size_t size = (size_t)msg.lParam;										
+													size_t size = (size_t)msg.lParam;
 													switch (data[0]) {
 														case CF_HDROP:	{
 																			UINT fileCount = DragQueryFileW((HDROP)(data+1), -1, NULL, 0);														
@@ -673,8 +690,10 @@ int do_update(lua_State *L) {
 			if ((nargs = lua_gettop(L)-n-1) || lua_isfunction(L, -1)) {
 				if (lua_pcall(L, nargs, LUA_MULTRET, 0))
 					lua_error(L);
-				if (msg.message == WM_LUACHANGE && (w->wtype == UIEdit))
-						SendMessage(w->handle, EM_SETEVENTMASK, 0, ENM_CHANGE | ENM_SELCHANGE | ENM_MOUSEEVENTS);
+				if (msg.message == WM_LUACHANGE && (w->wtype == UIEdit)) {
+					DWORD oldMask = SendMessage(w->handle, EM_GETEVENTMASK, 0, 0);
+					SendMessage(w->handle, EM_SETEVENTMASK, 0, oldMask & ~ENM_CHANGE);
+				}
 				else if (msg.message == WM_LUACLOSE) {		
 					int result = lua_wait(L, t);		
 					if (!result || lua_toboolean(L, -1)) {
@@ -696,8 +715,16 @@ int do_update(lua_State *L) {
 				goto do_msg;
 		} else {
 			Widget *wp = (Widget*)GetWindowLongPtr(msg.hwnd, GWLP_USERDATA);
-			while(wp && (wp->wtype != UIWindow) && (wp->wtype != UITab)  && (wp->wtype != UIPanel) && (wp->wtype != UIGroup))
-				wp = (Widget*)GetWindowLongPtr(GetParent(wp->handle), GWLP_USERDATA);
+			if (msg.hwnd == GetDesktopWindow() || (uintptr_t)wp < 0x10000 || wp->type != TWidget)
+    			goto do_msg;
+			while(wp && (wp->wtype != UIWindow) && (wp->wtype != UITab)  && (wp->wtype != UIPanel) && (wp->wtype != UIGroup)) {
+				HWND hParent = GetParent(wp->handle);
+				wp = hParent ? (Widget*)GetWindowLongPtr(hParent, GWLP_USERDATA) : NULL;
+				if (wp && (wp->type != TWidget)) {
+					wp = NULL;
+					break;
+				}
+			}
 			if (wp) {
 				HWND parent = wp->handle;
 				if ((msg.message == WM_KEYDOWN) && (msg.wParam == VK_TAB)) {
@@ -756,31 +783,14 @@ LUA_PROPERTY_SET(ui, mainWindow) {
 	return 0;
 }
 
-static int RunTaskContinue(lua_State* L, int status, lua_KContext ctx) {
-	return (ctx && IsWindowVisible(((Widget*)ctx)->handle)) ? lua_yieldk(L, 0, ctx, RunTaskContinue) : 0;
-}
-
 static int UITaskContinue(lua_State* L, int status, lua_KContext ctx) {
 	do_update(L);
 	return uitask->status < TTerminated ? lua_yieldk(L, 0, ctx, UITaskContinue) : 0;
 }
 
-LUA_METHOD(ui, run) {
-	Widget *w = check_widget(L, 1, UIWindow);
-
-	main = w;
-	w->ismain = TRUE;
-	Widget_show(L);
-	lua_pushtask(L, RunTaskContinue, w, NULL);
-	lua_pushvalue(L, -1);
-	lua_call(L, 0, 0);
-	return 1;
-}
-
 static void prepare_drag(lua_State *L, int idx, IDataObject **dobj, IDropSource **dsrc, FORMATETC *fmtetc, STGMEDIUM *stgmed) {
 	extern HRESULT CreateDropSource(IDropSource **ppDropSource);
 	extern HRESULT CreateDataObject(FORMATETC *fmtetc, STGMEDIUM *stgmeds, IDataObject **ppDataObject);
-	// extern HGLOBAL table_to_HDROPFormat(lua_State *L, int idx);
 
 	switch(lua_type(L, idx)) {
 		case LUA_TSTRING:	{	
@@ -856,7 +866,7 @@ LUA_METHOD(ui, fontdialog) {
 	int n = lua_gettop(L), idx = 1;
 
 	if (n && (lua_type(L, 1) == LUA_TTABLE)) {
-		Widget *w = lua_self(L, 1, Widget);
+		Widget *w = lua_selfwidget(L, 1);
 		if (w->wtype == UIEdit) {
 			CHARFORMAT2W chf;
 			cf.lpLogFont = calloc(1, sizeof(LOGFONTW));
@@ -980,6 +990,7 @@ LUA_CONSTRUCTOR(Listbox) {
 	HIMAGELIST imglist = ImageList_Create(1, 1, ILC_COLOR32|ILC_MASK, ImageList_GetImageCount(w->imglist), 1);
 	ListView_SetExtendedListViewStyleEx(w->handle, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 	ListView_SetImageList(w->handle, imglist, LVSIL_SMALL);
+	w->user = ListView_CreateDragState();
 	lua_pushstring(L, "scroll");
 	lua_pushcfunction(L, Widget_vscroll);
 	lua_rawset(L, -3);
@@ -1134,21 +1145,21 @@ BOOL CALLBACK AdjustThemeProc(HWND h, LPARAM isDark) {
 		if ((wtype == UIWindow)) {
 			if (w) {
 				if (wtype != w->wtype)
-					goto panel;
+				goto panel;
 				HBRUSH lightbrush = GetSysColorBrush(COLOR_BTNFACE);
 				HBRUSH darkbrush = GetStockObject(BLACK_BRUSH);
 				if (isDark) {
 					if (w->brush == lightbrush)
 						w->brush = darkbrush;
 					if (w->status)
-						SetWindowSubclass(w->status, StatusProc, 4444, (DWORD_PTR)w);
+					SetWindowSubclass(w->status, StatusProc, 4444, (DWORD_PTR)w);
 				} else {
 					if (w->brush == darkbrush)
 						w->brush = lightbrush;
 					if (w->status)
-						SendMessageW(w->status, WM_NCACTIVATE, TRUE, 0);
+					SendMessageW(w->status, WM_NCACTIVATE, TRUE, 0);
 					if (w->status)
-						RemoveWindowSubclass(w->status, StatusProc, 4444);
+					RemoveWindowSubclass(w->status, StatusProc, 4444);
 				}
 				SetClassLongPtr(h, GCLP_HBRBACKGROUND, (LONG_PTR)w->brush);		
 				FlushMenuThemes();
@@ -1286,7 +1297,13 @@ dispatch:
 		}
 		RedrawWindow(h, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_ERASENOW | RDW_ERASE | RDW_ALLCHILDREN);
 		SetWindowPos(h, NULL, 0, 0, 0, 0, (w && w->wtype != UIWindow ? SWP_SHOWWINDOW : 0) | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+		if (w && w->tooltip) {
+			SetWindowTheme(w->tooltip, DarkMode ? L"DarkMode_Explorer" : L"Explorer", NULL);
+			SendMessage(w->tooltip, TTM_SETTIPBKCOLOR, DarkMode ? RGB(32,32,32) : GetSysColor(COLOR_INFOBK), 0);
+			SendMessage(w->tooltip, TTM_SETTIPTEXTCOLOR, DarkMode ? RGB(255,255,255) : GetSysColor(COLOR_INFOTEXT), 0);
+		}
 	}
+
 	return TRUE;
 }
 
@@ -1344,7 +1361,6 @@ MODULE_FUNCTIONS(ui)
 	METHOD(ui, error)
 	METHOD(ui, update)
 	METHOD(ui, remove)
-	METHOD(ui, run)
 	METHOD(ui, drag)
 END
 
@@ -1353,11 +1369,11 @@ int __declspec(dllexport)  luaopen_ui(lua_State *L) {
 	WNDCLASSEX wcex = {0};
 	DWORD dwLayout;
 	int i = -1;
-
+	
 	InitDarkMode();
-	HRESULT hr = OleInitialize(NULL);
+	OleInitialize(NULL);
 	uitask = lua_pushtask(L, UITaskContinue, NULL, NULL);
-
+	
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.lpfnWndProc = WindowProc;
 	wcex.cbClsExtra = 0;
@@ -1368,14 +1384,12 @@ int __declspec(dllexport)  luaopen_ui(lua_State *L) {
 	wcex.lpszClassName = "Window";
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(WINICON));
 	RegisterClassEx(&wcex);
-
+	
     if (GetProcessDefaultLayout(&dwLayout))
-       uiLayout = dwLayout == LAYOUT_RTL ? WS_EX_LAYOUTRTL : 0;
+		uiLayout = dwLayout == LAYOUT_RTL ? WS_EX_LAYOUTRTL : 0;
 
-	WM_LUAMAX = MAX_EVENTS;
 	while (events[++i])
 		lua_registerevent(L, events[i], NULL);
-
 	lua_regmodulefinalize(L, ui);
 	RegisterWidget(L, &UIWindow, "Window", Window_constructor, Window_methods, Window_metafields, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE);
 	RegisterWidget(L, &UIButton, "Button", Button_constructor, hastext_methods, NULL, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE);
@@ -1419,10 +1433,11 @@ int __declspec(dllexport)  luaopen_ui(lua_State *L) {
 	ui_interface.lua_registerevent = lua_registerevent;
 	ui_interface.WM_LUAMAX = &WM_LUAMAX;
 	ui_interface.WIDGET_METHODS = Widget_methods;
+	ui_interface.TWidget = TWidget;
 	ui_interface.task = uitask;
 	lua_getmetatable(L, -1);
 	lua_pushlightuserdata(L, &ui_interface);
 	lua_setfield(L, -2, "__interface");
-	lua_pop(L, 1);		
+	lua_pop(L, 1);	
 	return 1;
 }

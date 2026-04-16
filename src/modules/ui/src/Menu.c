@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025
+ | Luart.org, Copyright (c) Tine Samir 2026
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Menu.c | LuaRT Menu object implementation
@@ -9,7 +9,7 @@
 
 
 #include <luart.h>
-#include <Widget.h>
+#include "Widget.h"
 #include "ui.h"
 
 #include <windowsx.h>
@@ -136,7 +136,7 @@ LUA_CONSTRUCTOR(Menu) {
 }
 
 static int add_menuitems(lua_State *L, lua_Integer idx, int stridx) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	MENUITEMINFOW mi = {0};
 	int count = GetMenuItemCount(w->handle)+1;
 	int len, index = idx == -1 ? count : idx;
@@ -190,7 +190,7 @@ void remove_menuitem(lua_State *L, Widget *w, int idx) {
 }
 
 LUA_METHOD(Menu, remove) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	int idx = -1;
 
 	if (lua_isinteger(L, 2))
@@ -202,12 +202,12 @@ LUA_METHOD(Menu, remove) {
 }
 
 LUA_METHOD(Menu, clear) {
-	clear_menu(lua_self(L, 1, Widget));
+	clear_menu(lua_selfwidget(L, 1));
 	return 0;
 }
 
 LUA_PROPERTY_GET(Menu, count) {
-	lua_pushinteger(L, GetMenuItemCount(lua_self(L, 1, Widget)->handle));
+	lua_pushinteger(L, GetMenuItemCount(lua_selfwidget(L, 1)->handle));
 	return 1;
 }
 
@@ -229,7 +229,7 @@ LUA_METHOD(MenuItems, __index) {
 }
 
 LUA_PROPERTY_GET(MenuItem, submenu) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	
 	lua_pushnil(L);
 	if (w->item.mi->dwItemData)
@@ -238,7 +238,7 @@ LUA_PROPERTY_GET(MenuItem, submenu) {
 }
 
 LUA_PROPERTY_SET(MenuItem, submenu) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	
 	if (lua_isnil(L, 2))
 		w->item.mi->dwItemData = 0;
@@ -252,7 +252,7 @@ LUA_PROPERTY_SET(MenuItem, submenu) {
 
 
 LUA_PROPERTY_GET(MenuItem, onClick) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	MENUITEMINFOW mi = {0};
 	
 	mi.cbSize = sizeof(MENUITEMINFOW);
@@ -264,7 +264,7 @@ LUA_PROPERTY_GET(MenuItem, onClick) {
 }
 
 LUA_PROPERTY_SET(MenuItem, onClick) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	MENUITEMINFOW mi = {0};
 	UINT id = 0;
 	
@@ -352,7 +352,7 @@ LUA_PROPERTY_GET(Menu, items) {
 }
 
 LUA_PROPERTY_SET(Menu, items) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 
 	luaL_checktype(L, 2, LUA_TTABLE);
 	clear_menu(w);
@@ -407,7 +407,7 @@ LUA_CONSTRUCTOR(MenuItem) {
 }
 
 int menuitem_state(lua_State *L, UINT state, BOOL get) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	MENUITEMINFOW mi = {0};
 	int result = 0;
 	
@@ -426,12 +426,12 @@ int menuitem_state(lua_State *L, UINT state, BOOL get) {
 }
 
 LUA_METHOD(MenuItem, remove) {
-	remove_menuitem(L, lua_self(L, 1, Widget), -1);
+	remove_menuitem(L, lua_selfwidget(L, 1), -1);
 	return 0;
 }
 
 LUA_METHOD(MenuItem, loadicon) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	IWICBitmap *ibmp;
 
 	if (w->icon)
@@ -466,12 +466,12 @@ LUA_PROPERTY_GET(MenuItem, checked) {
 }
 
 LUA_PROPERTY_GET(MenuItem, index) {
-	lua_pushinteger(L, lua_self(L, 1, Widget)->index+1);
+	lua_pushinteger(L, lua_selfwidget(L, 1)->index+1);
 	return 1;
 }
 
 LUA_PROPERTY_SET(MenuItem, index) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	int index = luaL_checkinteger(L, 2);
 	
 	if (w->item.mi->dwItemData) {
@@ -487,12 +487,12 @@ LUA_PROPERTY_SET(MenuItem, index) {
 	return 0;	
 }
 LUA_PROPERTY_GET(MenuItem, text) {
-	lua_pushwstring(L, lua_self(L, 1, Widget)->item.mi->dwTypeData);
+	lua_pushwstring(L, lua_selfwidget(L, 1)->item.mi->dwTypeData);
 	return 1;	
 }
 
 LUA_PROPERTY_SET(MenuItem, text) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	
 	free(w->item.mi->dwTypeData);
 	free(w->item.mi);
@@ -503,7 +503,7 @@ LUA_PROPERTY_SET(MenuItem, text) {
 }
 
 LUA_METHOD(MenuItem, __gc) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	free(w->item.mi->dwTypeData);
 	free(w->item.mi);
 	return Widget___gc(L);
@@ -530,7 +530,7 @@ void FreeMenu(lua_State *L, Widget *w) {
 }
 
 LUA_METHOD(Menu, __gc) {
-	Widget *w = lua_self(L, 1, Widget);
+	Widget *w = lua_selfwidget(L, 1);
 	FreeMenu(L, w);
 	return Widget___gc(L);
 }

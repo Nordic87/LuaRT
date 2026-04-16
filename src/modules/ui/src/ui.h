@@ -1,6 +1,6 @@
 /*
  | LuaRT - A Windows programming framework for Lua
- | Luart.org, Copyright (c) Tine Samir 2025.
+ | Luart.org, Copyright (c) Tine Samir 2026.
  | See Copyright Notice in LICENSE.TXT
  |-------------------------------------------------
  | Widget.h | LuaRT Widget object header file
@@ -9,7 +9,7 @@
 #pragma once
 
 #include <luart.h>
-#include <Widget.h>
+#include "Widget.h"
 #include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
@@ -19,7 +19,45 @@
 extern "C" {
 #endif
 
-extern __declspec(dllexport) luart_type TWidget;
+#define lua_selfwidget(L, idx) ((Widget*)lua_tocinstance(L, idx, NULL))
+
+extern luart_type TWidget;
+extern luart_type TWidgetItem;
+typedef int WidgetType;
+
+typedef int (*lua_Event)(lua_State *L, Widget *w, MSG *msg);
+
+typedef void (*UI_INFO)(double *dpi, BOOL *isdark);
+typedef void *(*WIDGET_INIT)(lua_State *L, Widget **wp, double *dpi, BOOL *isdark);
+typedef Widget *(*WIDGET_CONSTRUCTOR)(lua_State *L, HWND h, WidgetType type, Widget *wp, SUBCLASSPROC proc);
+typedef Widget *(*WIDGET_DESTRUCTOR)(lua_State *L);
+typedef void (*WIDGET_REGISTER)(lua_State *L, int *type, const char *__typename, lua_CFunction constructor, const luaL_Reg *methods, const luaL_Reg *mt, BOOL has_text, BOOL has_font, BOOL has_cursor, BOOL has_icon, BOOL has_autosize, BOOL has_textalign, BOOL has_tooltip, BOOL is_parent, BOOL do_pop);
+typedef lua_Integer (*WIDGET_REGISTEREVENT)(lua_State *L, const char *methodname, lua_Event event);
+typedef LRESULT (CALLBACK *WIDGET_PROC)(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
+typedef struct {
+	UINT                *WM_LUAMAX;
+	WIDGET_INIT 		lua_widgetinitialize;
+	WIDGET_CONSTRUCTOR	lua_widgetconstructor;
+	WIDGET_DESTRUCTOR	lua_widgetdestructor;
+	WIDGET_REGISTER		lua_registerwidget;
+	WIDGET_REGISTEREVENT    lua_registerevent;
+	WIDGET_PROC			lua_widgetproc;
+	UI_INFO				lua_uigetinfo;
+	luaL_Reg 			*WIDGET_METHODS;
+    luart_type          TWidget;
+	Task			    *task;
+} UIInterface;
+
+typedef struct {
+    BOOL isDragging;
+    HIMAGELIST hDragImage ;
+    POINT PTXFS_START_RM_INFORMATION;
+    int selectedIndex;
+    Widget *sourceWidget;
+    uintptr_t lastDropHighlight;
+    HWND lastDropTarget;
+} DragState;
 
 void widget_type_new(lua_State *L, int *type, const char *_typename, lua_CFunction constructor, const luaL_Reg *methods, const luaL_Reg *mt, BOOL has_text, BOOL has_font, BOOL has_cursor, BOOL has_icon, BOOL has_autosize, BOOL has_textalign, BOOL has_tooltip, BOOL is_parent, BOOL do_pop);
 #define RegisterWidget(L, type, _typename, constructor, methods, mt, has_text, has_font, has_cursor, has_icon, has_autosize, has_textalign, has_tooltip, is_parent) widget_type_new(L, type, _typename, constructor, methods, mt, has_text, has_font, has_cursor, has_icon, has_autosize, has_textalign, has_tooltip, is_parent, TRUE)
@@ -45,8 +83,6 @@ static const PSTR cursors_values[] = {
 	IDC_ARROW, IDC_APPSTARTING, IDC_CROSS, IDC_HAND, IDC_HELP, IDC_IBEAM, IDC_NO, IDC_SIZEALL, IDC_SIZEWE, IDC_SIZENS, IDC_SIZENWSE, IDC_SIZENESW, IDC_UPARROW, IDC_WAIT, NULL
 };
 
-LUA_API  luart_type TWidgetItem;
-
 void new_items_mt(lua_State *L, Widget *w);
 #define get_item(w, i) __get_item(w, i, NULL)
 void *__get_item(Widget *w, int idx, HTREEITEM hti);
@@ -57,7 +93,9 @@ void __free_item(Widget *w, size_t idx, HTREEITEM hti);
 size_t get_count(Widget *w);
 void add_column(Widget *w);
 BOOL CALLBACK ResizeChilds(HWND h, LPARAM lParam);
-
+HTREEITEM get_Treeitem_byindex(HWND h, HTREEITEM parent, int start, int idx);
+int get_Treeitem_index(HWND hTree, HTREEITEM target);
+extern DragState dragState;
 void copy_menuitems(lua_State *L, HMENU from, HMENU to);
 
 void do_align(Widget *w);
