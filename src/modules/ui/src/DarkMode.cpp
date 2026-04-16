@@ -1,4 +1,4 @@
-#include <Widget.h>
+#include "Widget.h"
 #include "ui.h"
 #include "DarkMode.h"
 #include "IatHook.h"
@@ -71,37 +71,37 @@ extern "C" {
 		return _AllowDarkModeForWindow ? _AllowDarkModeForWindow(hWnd, allow) : FALSE;
 	}
 
+	struct WidgetEntry {
+		const wchar_t *name;
+		WidgetType *type;
+	};
+
+	static const WidgetEntry WidgetsClass[] = {
+		{L"Window",        &UIWindow},
+		{WC_BUTTONW,       &UIButton},
+		{WC_STATICW,       &UILabel},
+		{PROGRESS_CLASSW,  &UIProgressbar},
+		{WC_EDITW,         &UIEntry},
+		{MONTHCAL_CLASSW,  &UIDate},
+		{WC_TABCONTROLW,   &UITab},
+		{WC_TREEVIEWW,     &UITree},
+		{WC_COMBOBOXEXW,   &UICombo},
+		{L"RichEdit20W",   &UIEdit},   
+		{WC_LISTVIEWW,     &UIList},
+	};
+
 	WidgetType GetWidgetTypeFromHWND(HWND h) {
 		wchar_t classname[64];
-		WidgetType wtype = -1;
-		static std::map<std::wstring, int> WidgetsClass = {
-			{L"Window", UIWindow},
-			{WC_BUTTONW, UIButton},
-			{WC_STATICW, UILabel},
-			{PROGRESS_CLASSW, UIProgressbar},
-			{WC_EDITW, UIEntry},
-			{MONTHCAL_CLASSW, UIDate},
-			{WC_TABCONTROLW, UITab},
-			{WC_TREEVIEWW, UITree},
-			{WC_COMBOBOXEXW, UICombo},
-			{RICHEDIT_CLASSW, UIEdit},
-			{WC_LISTVIEWW, UIList},
-		};
 
-		if (GetClassNameW(h, classname, 64)) {
-			auto it = WidgetsClass.find(classname);
-			if (it != WidgetsClass.end()) {
-				wtype = it->second;
-				if (wtype == UIButton) {
-					switch(GetWindowLongPtr(h, GWL_STYLE) & BS_TYPEMASK) {
-						case BS_AUTORADIOBUTTON: 	return UIRadio;
-						case BS_AUTOCHECKBOX:		return UICheck;
-						case BS_GROUPBOX:			return UIGroup;
-					}
-				}
-			}
+		if (!GetClassNameW(h, classname, 64))
+			return -1;
+
+		for (const auto &e : WidgetsClass) {
+			if (wcscmp(classname, e.name) == 0)
+				return *e.type;
 		}
-		return wtype;
+
+		return -1;
 	}
 
 	void FlushMenuThemes(void) {
