@@ -29,6 +29,7 @@ Lua multipurpose programming framework to develop Windows applications
 - Lightweight with no other dependencies
 - Develop in Lua, C programming knowledge is not needed
 - Batteries included : UTF8 strings, sockets, GUI, compression, audio, graphics, C FFI...
+- Optional preprocessor to enable syntax extensions (import, class, async, await, try/catch/end, ...)
 - LuaRT runs on Windows 8.1, Windows 10 and Windows 11.
 
 #### Complete development environment 
