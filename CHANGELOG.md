@@ -1,4 +1,4 @@
-## LuaRT v2.2.0 (Apr 06 2026)
+## LuaRT v2.2.0 (Apr 21 2026)
 
 #### Highlights 
 - Lua VM updated to 5.5
