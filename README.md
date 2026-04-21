@@ -65,11 +65,11 @@ Go to the ```\src``` directory and type ```nmake```:
 - `nmake clean` : Clean all the generated binaries
 
 If everything went right, the `\bin` folder will contain the LuaRT toolchain :
-- ```lua54.dll``` : the LuaRT shared library, ABI compatible with the standard lua54.dll
+- ```lua55.dll``` : the LuaRT shared library, ABI compatible with the standard lua54.dll
 - ```luart.exe``` : the LuaRT console interpreter
 - ```wluart.exe```: the desktop LuaRT interpreter
-- ```luart-static.exe```: the LuaRT console interpreter, without ```lua54.dll``` dependency
-- ```wluart-static.exe```: the desktop LuaRT interpreter, without ```lua54.dll``` dependency
+- ```luart-static.exe```: the LuaRT console interpreter, without ```lua55.dll``` dependency
+- ```wluart-static.exe```: the desktop LuaRT interpreter, without ```lua55.dll``` dependency
 - ```rtc.exe``` : the Lua script to executable compiler
 - ```wrtc.exe``` : the GUI front-end for rtc
 
