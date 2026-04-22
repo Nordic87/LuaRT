@@ -82,9 +82,6 @@ SET PATH=%PATH%;"C:\LuaRT\bin"
 ## :small_blue_diamond:Usage
 
 ```
-luart.exe [-e "statement"] [filename] [arg1 arg2...]
-wluart.exe [-e "statement"] [filename] [arg1 arg2...]
-
 luart.exe [options] [script] [args]
 wluart.exe [options] [script] [args]
     options:
