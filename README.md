@@ -85,11 +85,14 @@ SET PATH=%PATH%;"C:\LuaRT\bin"
 luart.exe [-e "statement"] [filename] [arg1 arg2...]
 wluart.exe [-e "statement"] [filename] [arg1 arg2...]
 
--e "statement"
-Executes the Lua statement in double quotes and exits.
-
-filename [arg1 arg2...]
-Loads and executes the Lua script in "filename", with optional arguments (each will be available in the global table arg in Lua).
+luart.exe [options] [script] [args]
+wluart.exe [options] [script] [args]
+    options:
+        -e stat         Executes the given Lua statement
+        -l name         Require library 'name' before executing script
+        -v              Show version information
+    script              Run a Lua script file
+    args                Arguments for Lua interpreter
 ```
 To get started with LuaRT and make your first steps, follow the [Getting started tutorial](https://www.luart.org/doc/install.html)
 
